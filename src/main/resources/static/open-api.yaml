@@ -1,0 +1,352 @@
+openapi: 3.0.3
+info:
+  title: FoodCourt Management API
+  description: API para gestión de restaurantes y platos - Plazoleta de comidas
+  version: 1.0.0
+  contact:
+    name: Pragma PowerUp Team
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local de desarrollo
+
+
+paths:
+  /restaurants:
+    post:
+      tags:
+        - Restaurants
+      summary: Crear un nuevo restaurante
+      description: Crea un nuevo restaurante en el sistema (solo usuarios con rol propietario)
+      operationId: createRestaurant
+      requestBody:
+        description: Datos del restaurante a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RestaurantRequest'
+      responses:
+        '201':
+          description: Restaurante creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RestaurantDataResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dishes:
+    post:
+      tags:
+        - Dishes
+      summary: Crear un nuevo plato
+      description: Crea un nuevo plato en un restaurante (solo propietario del restaurante)
+      operationId: createDish
+      requestBody:
+        description: Datos del plato a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DishRequest'
+      responses:
+        '201':
+          description: Plato creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DishDataResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dishes/{id}:
+    patch:
+      tags:
+        - Dishes
+      summary: Actualizar precio y descripción de un plato
+      description: Actualiza el precio y/o descripción de un plato (solo propietario del restaurante)
+      operationId: updateDish
+      parameters:
+        - name: id
+          in: path
+          description: ID del plato a actualizar
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Datos del plato a actualizar
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DishUpdateRequest'
+      responses:
+        '200':
+          description: Plato actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DishDataResponse'
+        '400':
+          description: Datos de entrada inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Plato no encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+components:
+  schemas:
+    RestaurantRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nombre del restaurante (puede contener números pero no solo números)
+          example: "Restaurante El Buen Sabor"
+        nit:
+          type: string
+          pattern: '^[0-9]+$'
+          maxLength: 20
+          description: NIT del restaurante (solo números)
+          example: "9001234567"
+        address:
+          type: string
+          minLength: 1
+          maxLength: 200
+          description: Dirección del restaurante
+          example: "Calle 123 #45-67"
+        phoneNumber:
+          type: string
+          maxLength: 13
+          pattern: '^\+?[0-9]{1,13}$'
+          description: Teléfono del restaurante (máximo 13 caracteres, puede contener +)
+          example: "+573001234567"
+        urlLogo:
+          type: string
+          maxLength: 500
+          description: URL del logo del restaurante
+          example: "https://example.com/logo.png"
+        ownerId:
+          type: integer
+          format: int64
+          description: ID del usuario propietario del restaurante
+          example: 1
+      required:
+        - name
+        - nit
+        - address
+        - phoneNumber
+        - urlLogo
+        - ownerId
+
+    RestaurantResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del restaurante
+          example: 1
+        name:
+          type: string
+          description: Nombre del restaurante
+          example: "Restaurante El Buen Sabor"
+        nit:
+          type: string
+          description: NIT del restaurante
+          example: "9001234567"
+        address:
+          type: string
+          description: Dirección del restaurante
+          example: "Calle 123 #45-67"
+        phoneNumber:
+          type: string
+          description: Teléfono del restaurante
+          example: "+573001234567"
+        urlLogo:
+          type: string
+          description: URL del logo del restaurante
+          example: "https://example.com/logo.png"
+        ownerId:
+          type: integer
+          format: int64
+          description: ID del usuario propietario
+          example: 1
+
+    RestaurantDataResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/RestaurantResponse'
+        message:
+          type: string
+          example: "Restaurante creado exitosamente"
+
+    DishRequest:
+      type: object
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nombre del plato
+          example: "Bandeja Paisa"
+        price:
+          type: integer
+          minimum: 1
+          description: Precio del plato en números enteros positivos mayores a 0
+          example: 25000
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Descripción del plato
+          example: "Deliciosa bandeja paisa tradicional con todos los ingredientes"
+        urlImage:
+          type: string
+          maxLength: 500
+          description: URL de la imagen del plato
+          example: "https://example.com/bandeja-paisa.jpg"
+        category:
+          type: string
+          minLength: 1
+          maxLength: 50
+          description: Categoría del plato
+          example: "Plato típico"
+        restaurantId:
+          type: integer
+          format: int64
+          description: ID del restaurante al que pertenece el plato
+          example: 1
+      required:
+        - name
+        - price
+        - description
+        - urlImage
+        - category
+        - restaurantId
+
+    DishUpdateRequest:
+      type: object
+      properties:
+        price:
+          type: integer
+          minimum: 1
+          description: Nuevo precio del plato
+          example: 28000
+        description:
+          type: string
+          minLength: 1
+          maxLength: 500
+          description: Nueva descripción del plato
+          example: "Bandeja paisa mejorada con ingredientes premium"
+
+    DishResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del plato
+          example: 1
+        name:
+          type: string
+          description: Nombre del plato
+          example: "Bandeja Paisa"
+        price:
+          type: integer
+          description: Precio del plato
+          example: 25000
+        description:
+          type: string
+          description: Descripción del plato
+          example: "Deliciosa bandeja paisa tradicional"
+        urlImage:
+          type: string
+          description: URL de la imagen del plato
+          example: "https://example.com/bandeja-paisa.jpg"
+        category:
+          type: string
+          description: Categoría del plato
+          example: "Plato típico"
+        active:
+          type: boolean
+          description: Indica si el plato está activo
+          example: true
+        restaurantId:
+          type: integer
+          format: int64
+          description: ID del restaurante
+          example: 1
+
+    DishDataResponse:
+      type: object
+      properties:
+        data:
+          $ref: '#/components/schemas/DishResponse'
+        message:
+          type: string
+          example: "Plato creado exitosamente"
+
+    ErrorResponse:
+      type: object
+      properties:
+        timestamp:
+          type: string
+          format: date-time
+          description: Timestamp del error
+          example: "2025-11-30T10:30:00Z"
+        status:
+          type: integer
+          description: Código de estado HTTP
+          example: 400
+        error:
+          type: string
+          description: Tipo de error
+          example: "Bad Request"
+        message:
+          type: string
+          description: Mensaje descriptivo del error
+          example: "El campo 'name' es requerido"
+        path:
+          type: string
+          description: Path de la petición que causó el error
+          example: "/api/v1/restaurants"
+
