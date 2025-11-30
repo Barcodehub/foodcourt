@@ -4,6 +4,7 @@ import com.pragma.powerup.domain.api.IDishServicePort;
 import com.pragma.powerup.domain.api.IRestaurantServicePort;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
+import com.pragma.powerup.domain.spi.ISecurityContextPort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
 import com.pragma.powerup.domain.usecase.DishUseCase;
 import com.pragma.powerup.domain.usecase.RestaurantUseCase;
@@ -23,8 +24,9 @@ public class BeanConfiguration {
     @Bean
     public IDishServicePort dishServicePort(
             IDishPersistencePort dishPersistencePort,
-            IRestaurantPersistencePort restaurantPersistencePort) {
-        return new DishUseCase(dishPersistencePort, restaurantPersistencePort);
+            IRestaurantPersistencePort restaurantPersistencePort,
+            ISecurityContextPort securityContextPort) {
+        return new DishUseCase(dishPersistencePort, restaurantPersistencePort, securityContextPort);
     }
 }
 

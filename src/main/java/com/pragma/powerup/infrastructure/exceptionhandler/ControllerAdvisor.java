@@ -142,6 +142,30 @@ public class ControllerAdvisor {
         return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
     }
 
+    @ExceptionHandler(UnauthorizedRestaurantCreationException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedRestaurantCreationException(
+            UnauthorizedRestaurantCreationException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.FORBIDDEN.value());
+        response.put(ERROR, "Unauthorized Restaurant Creation");
+        response.put(MESSAGE, exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
+    @ExceptionHandler(UnauthorizedDishOperationException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorizedDishOperationException(
+            UnauthorizedDishOperationException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.FORBIDDEN.value());
+        response.put(ERROR, "Unauthorized Dish Operation");
+        response.put(MESSAGE, exception.getMessage());
+
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(response);
+    }
+
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, Object>> handleDataIntegrityViolationException(
             DataIntegrityViolationException exception) {
