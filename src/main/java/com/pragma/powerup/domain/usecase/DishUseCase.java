@@ -31,7 +31,6 @@ public class DishUseCase implements IDishServicePort {
             throw new RestaurantNotFoundException("No se encontro el restaurante con ID: " + dishModel.getRestaurantId());
         }
 
-        // Validar que el propietario autenticado sea dueño del restaurante
         validateRestaurantOwnership(restaurant.get());
 
         if (dishModel.getActive() == null) {
