@@ -2,6 +2,7 @@ package com.pragma.powerup.infrastructure.input.rest;
 
 import com.pragma.powerup.apifirst.api.DishesApi;
 import com.pragma.powerup.apifirst.model.DishDataResponseDto;
+import com.pragma.powerup.apifirst.model.DishListResponseDto;
 import com.pragma.powerup.apifirst.model.DishRequestDto;
 import com.pragma.powerup.apifirst.model.DishUpdateRequestDto;
 import com.pragma.powerup.apifirst.model.ToggleDishResponseDto;
@@ -37,6 +38,13 @@ public class DishController implements DishesApi {
     @RequireRole(RoleEnum.PROPIETARIO)
     public ResponseEntity<DishDataResponseDto> updateDish(Long id, DishUpdateRequestDto dishUpdateRequestDto) {
         DishDataResponseDto response = dishHandler.updateDish(id, dishUpdateRequestDto);
+        return ResponseEntity.ok(response);
+    }
+
+    @Override
+    @RequireRole(RoleEnum.CLIENTE)
+    public ResponseEntity<DishListResponseDto> listDishesByRestaurant(Long restaurantId, Integer page, Integer size, String category) {
+        DishListResponseDto response = dishHandler.listDishesByRestaurant(restaurantId, category, page, size);
         return ResponseEntity.ok(response);
     }
 }

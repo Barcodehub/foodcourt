@@ -1,6 +1,7 @@
 package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.api.IDishServicePort;
+import com.pragma.powerup.domain.enums.CategoryEnum;
 import com.pragma.powerup.domain.exception.DishNotFoundException;
 import com.pragma.powerup.domain.exception.InvalidDishException;
 import com.pragma.powerup.domain.exception.RestaurantNotFoundException;
@@ -11,6 +12,8 @@ import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -25,7 +28,7 @@ public class DishUseCase implements IDishServicePort {
     public DishModel createDish(DishModel dishModel) {
         Optional<RestaurantModel> restaurant = restaurantPersistencePort.findById(dishModel.getRestaurantId());
         if (restaurant.isEmpty()) {
-            throw new RestaurantNotFoundException("No se encontrÃ³ el restaurante con ID: " + dishModel.getRestaurantId());
+            throw new RestaurantNotFoundException("No se encontro el restaurante con ID: " + dishModel.getRestaurantId());
         }
 
         // Validar que el propietario autenticado sea dueño del restaurante
@@ -64,6 +67,16 @@ public class DishUseCase implements IDishServicePort {
         return dishPersistencePort.updateDish(dish);
     }
 
+    @Override
+    public Page<DishModel> listDishesByRestaurant(Long restaurantId, CategoryEnum category, Pageable pageable) {
+        Optional<RestaurantModel> restaurant = restaurantPersistencePort.findById(restaurantId);
+        if (restaurant.isEmpty()) {
+            throw new RestaurantNotFoundException("No se encontró el restaurante con ID: " + restaurantId);
+        }
+
+        return dishPersistencePort.findByRestaurantId(restaurantId, category, pageable);
+    }
+
 
     private DishModel getValidatedDish(Long dishId) {
         Optional<DishModel> existingDish = dishPersistencePort.findById(dishId);
@@ -82,9 +95,6 @@ public class DishUseCase implements IDishServicePort {
     }
 
 
-    /**
-     * Valida que el usuario autenticado sea el propietario del restaurante
-     */
     private void validateRestaurantOwnership(RestaurantModel restaurant) {
         Long currentUserId = securityContextPort.getCurrentUserId();
 

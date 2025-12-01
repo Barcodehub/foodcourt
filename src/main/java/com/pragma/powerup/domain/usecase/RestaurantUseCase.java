@@ -10,6 +10,8 @@ import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.Optional;
 
@@ -38,6 +40,11 @@ public class RestaurantUseCase implements IRestaurantServicePort {
         }
 
         return restaurantPersistencePort.saveRestaurant(restaurantModel);
+    }
+
+    @Override
+    public Page<RestaurantModel> listRestaurants(Pageable pageable) {
+        return restaurantPersistencePort.findAll(pageable);
     }
 
     private void validateRestaurantName(String name) {

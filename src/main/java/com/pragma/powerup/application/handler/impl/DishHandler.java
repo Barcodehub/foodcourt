@@ -4,8 +4,12 @@ import com.pragma.powerup.apifirst.model.*;
 import com.pragma.powerup.application.handler.IDishHandler;
 import com.pragma.powerup.application.mapper.IDishMapper;
 import com.pragma.powerup.domain.api.IDishServicePort;
+import com.pragma.powerup.domain.enums.CategoryEnum;
 import com.pragma.powerup.domain.model.DishModel;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -51,5 +55,24 @@ public class DishHandler implements IDishHandler {
         dataResponse.setActive(responseDto.getActive());
 
         return dataResponse;
+    }
+
+    @Override
+    public DishListResponseDto listDishesByRestaurant(Long restaurantId, String category, Integer page, Integer size) {
+        // Convertir la categoría de String a Enum si se proporciona
+        CategoryEnum categoryEnum = null;
+        if (category != null && !category.isEmpty()) {
+            categoryEnum = CategoryEnum.valueOf(category);
+        }
+
+        // Crear Pageable
+        Pageable pageable = PageRequest.of(
+            page != null ? page : 0,
+            size != null ? size : 10
+        );
+
+        Page<DishModel> dishesPage = dishServicePort.listDishesByRestaurant(restaurantId, categoryEnum, pageable);
+
+        return dishMapper.toListResponseDto(dishesPage);
     }
 }

@@ -38,6 +38,7 @@ public class DishEntity {
     @Column(nullable = false)
     private Boolean active = true;
 
-    @Column(nullable = false)
-    private Long restaurantId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "restaurant_id", nullable = false)
+    private RestaurantEntity restaurant;
 }

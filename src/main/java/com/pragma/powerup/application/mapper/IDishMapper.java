@@ -1,40 +1,45 @@
 package com.pragma.powerup.application.mapper;
 
+import com.pragma.powerup.apifirst.model.DishListResponseDto;
 import com.pragma.powerup.apifirst.model.DishRequestDto;
 import com.pragma.powerup.apifirst.model.DishResponseDto;
 import com.pragma.powerup.apifirst.model.DishUpdateRequestDto;
 import com.pragma.powerup.apifirst.model.ToggleDishResponseDto;
-import com.pragma.powerup.domain.enums.CategoryEnum;
 import com.pragma.powerup.domain.model.DishModel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
+import org.springframework.data.domain.Page;
 
-@Mapper(componentModel = "spring")
+import java.util.List;
+import java.util.stream.Collectors;
+
+@Mapper(componentModel = "spring", uses = CategoryConverter.class)
 public interface IDishMapper {
 
-    @Mapping(target = "category", expression = "java(mapDtoToModelCategory(requestDto.getCategory()))")
+    @Mapping(target = "category", source = "category")
     DishModel toModel(DishRequestDto requestDto);
 
     DishModel toModel(DishUpdateRequestDto updateRequestDto);
 
-    @Mapping(target = "category", expression = "java(mapModelToDtoCategory(model.getCategory()))")
+    @Mapping(target = "category", source = "category")
     DishResponseDto toResponseDto(DishModel model);
 
     ToggleDishResponseDto toToggleResponseDto(DishModel toggledDish);
 
-    // Conversión de DishRequestDto.CategoryEnum a domain.CategoryEnum
-    default CategoryEnum mapDtoToModelCategory(DishRequestDto.CategoryEnum dtoCategory) {
-        if (dtoCategory == null) {
-            throw new IllegalArgumentException("La categoría es obligatoria");
-        }
-        return CategoryEnum.valueOf(dtoCategory.name());
-    }
 
-    // Conversión de domain.CategoryEnum a DishResponseDto.CategoryEnum
-    default DishResponseDto.CategoryEnum mapModelToDtoCategory(CategoryEnum modelCategory) {
-        if (modelCategory == null) {
-            return null;
-        }
-        return DishResponseDto.CategoryEnum.valueOf(modelCategory.name());
+    default DishListResponseDto toListResponseDto(Page<DishModel> page) {
+        List<DishResponseDto> content = page.getContent().stream()
+            .map(this::toResponseDto)
+            .collect(Collectors.toList());
+
+        DishListResponseDto response = new DishListResponseDto();
+        response.data(content);
+        response.setPage(page.getNumber());
+        response.setSize(page.getSize());
+        response.setTotalElements(page.getTotalElements());
+        response.setTotalPages(page.getTotalPages());
+        response.setLast(page.isLast());
+
+        return response;
     }
 }
