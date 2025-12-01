@@ -3,6 +3,7 @@ package com.pragma.powerup.application.mapper;
 import com.pragma.powerup.apifirst.model.DishRequestDto;
 import com.pragma.powerup.apifirst.model.DishResponseDto;
 import com.pragma.powerup.apifirst.model.DishUpdateRequestDto;
+import com.pragma.powerup.apifirst.model.ToggleDishResponseDto;
 import com.pragma.powerup.domain.model.DishModel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -18,4 +19,5 @@ public interface IDishMapper {
 
     DishResponseDto toResponseDto(DishModel model);
 
+    ToggleDishResponseDto toToggleResponseDto(DishModel toggledDish);
 }

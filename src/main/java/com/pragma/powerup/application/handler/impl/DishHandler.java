@@ -1,9 +1,6 @@
 package com.pragma.powerup.application.handler.impl;
 
-import com.pragma.powerup.apifirst.model.DishDataResponseDto;
-import com.pragma.powerup.apifirst.model.DishRequestDto;
-import com.pragma.powerup.apifirst.model.DishResponseDto;
-import com.pragma.powerup.apifirst.model.DishUpdateRequestDto;
+import com.pragma.powerup.apifirst.model.*;
 import com.pragma.powerup.application.handler.IDishHandler;
 import com.pragma.powerup.application.mapper.IDishMapper;
 import com.pragma.powerup.domain.api.IDishServicePort;
@@ -40,6 +37,18 @@ public class DishHandler implements IDishHandler {
         DishDataResponseDto dataResponse = new DishDataResponseDto();
         dataResponse.setData(responseDto);
         dataResponse.setMessage("Plato actualizado exitosamente");
+
+        return dataResponse;
+    }
+
+    @Override
+    public ToggleDishResponseDto toggleDishStatus(Long id) {
+        DishModel toggledDish = dishServicePort.toggleDishStatus(id);
+        ToggleDishResponseDto responseDto = dishMapper.toToggleResponseDto(toggledDish);
+
+        ToggleDishResponseDto dataResponse = new ToggleDishResponseDto();
+        dataResponse.setId(responseDto.getId());
+        dataResponse.setActive(responseDto.getActive());
 
         return dataResponse;
     }

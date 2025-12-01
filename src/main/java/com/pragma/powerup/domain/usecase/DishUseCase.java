@@ -40,19 +40,7 @@ public class DishUseCase implements IDishServicePort {
 
     @Override
     public DishModel updateDish(Long dishId, DishModel dishModel) {
-        Optional<DishModel> existingDish = dishPersistencePort.findById(dishId);
-        if (existingDish.isEmpty()) {
-            throw new DishNotFoundException("No se encontrÃ³ el plato con ID: " + dishId);
-        }
-
-        DishModel dish = existingDish.get();
-
-        // Obtener el restaurante asociado al plato y validar propiedad
-        Optional<RestaurantModel> restaurant = restaurantPersistencePort.findById(dish.getRestaurantId());
-        if (restaurant.isEmpty()) {
-            throw new RestaurantNotFoundException("No se encontró el restaurante asociado al plato");
-        }
-        validateRestaurantOwnership(restaurant.get());
+        DishModel dish = getValidatedDish(dishId);
 
         if (dishModel.getPrice() != null) {
             if (dishModel.getPrice() <= 0) {
@@ -67,6 +55,32 @@ public class DishUseCase implements IDishServicePort {
 
         return dishPersistencePort.updateDish(dish);
     }
+
+    @Override
+    public DishModel toggleDishStatus(Long id) {
+        DishModel dish = getValidatedDish(id);
+        dish.setActive(!dish.getActive());
+
+        return dishPersistencePort.updateDish(dish);
+    }
+
+
+    private DishModel getValidatedDish(Long dishId) {
+        Optional<DishModel> existingDish = dishPersistencePort.findById(dishId);
+        if (existingDish.isEmpty()) {
+            throw new DishNotFoundException("No se encontró el plato con ID: " + dishId);
+        }
+        DishModel dish = existingDish.get();
+
+        Optional<RestaurantModel> restaurant = restaurantPersistencePort.findById(dish.getRestaurantId());
+        if (restaurant.isEmpty()) {
+            throw new RestaurantNotFoundException("No se encontró el restaurante asociado al plato");
+        }
+        validateRestaurantOwnership(restaurant.get());
+
+        return dish;
+    }
+
 
     /**
      * Valida que el usuario autenticado sea el propietario del restaurante
