@@ -1,5 +1,6 @@
 package com.pragma.powerup.domain.model;
 
+import com.pragma.powerup.domain.enums.CategoryEnum;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -15,7 +16,7 @@ public class DishModel {
     private Integer price;
     private String description;
     private String urlImage;
-    private String category;
+    private CategoryEnum category;
     private Boolean active;
     private Long restaurantId;
 }

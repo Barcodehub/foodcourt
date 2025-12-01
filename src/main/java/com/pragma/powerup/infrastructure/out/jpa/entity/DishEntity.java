@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.out.jpa.entity;
 
+import com.pragma.powerup.domain.enums.CategoryEnum;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -30,8 +31,9 @@ public class DishEntity {
     @Column(nullable = false, length = 500)
     private String urlImage;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 50)
-    private String category;
+    private CategoryEnum category;
 
     @Column(nullable = false)
     private Boolean active = true;

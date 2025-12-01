@@ -286,10 +286,17 @@ components:
           example: "https://example.com/bandeja-paisa.jpg"
         category:
           type: string
-          minLength: 1
-          maxLength: 50
           description: Categoría del plato
-          example: "Plato típico"
+          enum:
+            - ENTRADAS
+            - PLATOS_FUERTES
+            - SOPAS
+            - ENSALADAS
+            - BEBIDAS
+            - POSTRES
+            - ACOMPAÑAMIENTOS
+            - COMIDA_RAPIDA
+          example: "PLATOS_FUERTES"
         restaurantId:
           type: integer
           format: int64
@@ -345,7 +352,16 @@ components:
         category:
           type: string
           description: Categoría del plato
-          example: "Plato típico"
+          enum:
+            - ENTRADAS
+            - PLATOS_FUERTES
+            - SOPAS
+            - ENSALADAS
+            - BEBIDAS
+            - POSTRES
+            - ACOMPAÑAMIENTOS
+            - COMIDA_RAPIDA
+          example: "PLATOS_FUERTES"
         active:
           type: boolean
           description: Indica si el plato está activo
