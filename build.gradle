@@ -42,6 +42,9 @@ dependencies {
 	// AspectJ para anotaciones de seguridad
 	implementation 'org.springframework.boot:spring-boot-starter-aop'
 
+	// Spring Cloud OpenFeign para comunicación con microservicio de auditoría
+	implementation 'org.springframework.cloud:spring-cloud-starter-openfeign:4.1.0'
+
 	// MapStruct
 	implementation libs.mapstruct
 	annotationProcessor libs.lombok.mapstruct.binding

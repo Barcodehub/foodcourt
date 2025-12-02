@@ -2,6 +2,8 @@ package com.pragma.powerup.application.handler;
 
 import com.pragma.powerup.apifirst.model.*;
 
+import java.util.List;
+
 public interface IOrderHandler {
     OrderDataResponseDto createOrder(OrderRequestDto OrderRequestDto);
 
@@ -14,4 +16,9 @@ public interface IOrderHandler {
     OrderDataResponseDto deliverOrder(Long orderId, String securityPin);
 
     OrderDataResponseDto cancelOrder(Long orderId);
+
+    /**
+     * Consulta el historial de auditoría de los pedidos del cliente autenticado
+     */
+    OrderStatusAuditListResponseDto getMyOrdersAuditHistory(Long orderId, List<String> actionTypes, Integer page, Integer size);
 }

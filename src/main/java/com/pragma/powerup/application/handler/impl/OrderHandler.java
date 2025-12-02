@@ -5,11 +5,15 @@ import com.pragma.powerup.application.handler.IOrderHandler;
 import com.pragma.powerup.application.mapper.IOrderMapper;
 import com.pragma.powerup.domain.api.IOrderServicePort;
 import com.pragma.powerup.domain.model.OrderModel;
+import com.pragma.powerup.domain.spi.IOrderAuditPort;
+import com.pragma.powerup.domain.spi.ISecurityContextPort;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +21,8 @@ public class OrderHandler implements IOrderHandler {
 
     private final IOrderMapper orderMapper;
     private final IOrderServicePort orderServicePort;
+    private final IOrderAuditPort orderAuditPort;
+    private final ISecurityContextPort securityContextPort;
 
 
     @Override
@@ -85,5 +91,25 @@ public class OrderHandler implements IOrderHandler {
         dataResponse.setData(responseDto);
         dataResponse.setMessage("Orden cancelada exitosamente");
         return dataResponse;
+    }
+
+    @Override
+    public OrderStatusAuditListResponseDto getMyOrdersAuditHistory(
+            Long orderId,
+            List<String> actionTypes,
+            Integer page,
+            Integer size
+    ) {
+        // Obtener el ID del cliente autenticado
+        Long clientId = securityContextPort.getCurrentUserId();
+
+        // Delegar la consulta al puerto de auditoría
+        return orderAuditPort.getAuditHistory(
+                clientId,
+                orderId,
+                actionTypes,
+                page != null ? page : 0,
+                size != null ? size : 10
+        );
     }
 }

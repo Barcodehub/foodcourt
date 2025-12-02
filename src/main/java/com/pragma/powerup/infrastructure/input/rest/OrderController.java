@@ -2,16 +2,15 @@ package com.pragma.powerup.infrastructure.input.rest;
 
 
 import com.pragma.powerup.apifirst.api.OrdersApi;
-import com.pragma.powerup.apifirst.model.DeliverOrderRequestDto;
-import com.pragma.powerup.apifirst.model.OrderDataResponseDto;
-import com.pragma.powerup.apifirst.model.OrderListResponseDto;
-import com.pragma.powerup.apifirst.model.OrderRequestDto;
+import com.pragma.powerup.apifirst.model.*;
 import com.pragma.powerup.application.handler.IOrderHandler;
 import com.pragma.powerup.domain.enums.RoleEnum;
 import com.pragma.powerup.infrastructure.security.annotations.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -58,6 +57,27 @@ public class OrderController implements OrdersApi {
     @RequireRole(RoleEnum.CLIENTE)
     public ResponseEntity<OrderDataResponseDto> cancelOrder(Long orderId) {
         OrderDataResponseDto responseDto = orderHandler.cancelOrder(orderId);
+        return ResponseEntity.ok(responseDto);
+    }
+
+    /**
+     * Consulta el historial de auditoría de los pedidos del cliente autenticado
+     * Implementa el método generado por OpenAPI: getMyOrdersAuditHistory
+     */
+    @Override
+    @RequireRole(RoleEnum.CLIENTE)
+    public ResponseEntity<OrderStatusAuditListResponseDto> getMyOrdersAuditHistory(
+            Long orderId,
+            List<String> actionTypes,
+            Integer page,
+            Integer size
+    ) {
+        OrderStatusAuditListResponseDto responseDto = orderHandler.getMyOrdersAuditHistory(
+                orderId,
+                actionTypes,
+                page,
+                size
+        );
         return ResponseEntity.ok(responseDto);
     }
 }

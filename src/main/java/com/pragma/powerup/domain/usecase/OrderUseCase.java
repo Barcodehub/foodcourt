@@ -7,6 +7,7 @@ import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.SmsNotificationModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
+import com.pragma.powerup.domain.spi.IOrderAuditPort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
@@ -36,6 +37,7 @@ public class OrderUseCase implements IOrderServicePort {
     private final ISecurityContextPort securityContextPort;
     private final IUserValidationPort userValidationPort;
     private final ISmsNotificationPort smsNotificationPort;
+    private final IOrderAuditPort orderAuditPort;
 
 
     @Override
@@ -45,6 +47,21 @@ public class OrderUseCase implements IOrderServicePort {
         orderModel.setStatus(OrderStatusEnum.PENDIENT);
         orderModel.setSecurityPin(generateSecurityPin());
         OrderModel orderSaved = orderPersistencePort.saveOrder(orderModel);
+
+        // Registrar auditoría de creación de orden
+        registerAudit(
+                orderSaved.getId(),
+                orderSaved.getRestaurant().getId(),
+                orderSaved.getClient(),
+                null, // No hay estado anterior en creación
+                OrderStatusEnum.PENDIENT,
+                orderSaved.getClient(),
+                "CLIENTE",
+                "ORDER_CREATED",
+                null,
+                "Pedido creado exitosamente"
+        );
+
         // TODO: Enviar el PIN al cliente por SMS/Email
         return orderSaved;
     }
@@ -81,16 +98,35 @@ public class OrderUseCase implements IOrderServicePort {
             throw new InvalidOrderStatusException(ExceptionResponse.ORDER_INVALID_STATUS_FOR_ASSIGN.getMessage());
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
+
         // Asignar el empleado y cambiar estado a IN_PREPARE
         order.setEmployee(employeeId);
         order.setStatus(OrderStatusEnum.IN_PREPARE);
-        return orderPersistencePort.updateOrder(order);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Registrar auditoría de asignación
+        registerAudit(
+                updatedOrder.getId(),
+                updatedOrder.getRestaurant().getId(),
+                updatedOrder.getClient(),
+                previousStatus,
+                OrderStatusEnum.IN_PREPARE,
+                employeeId,
+                "EMPLEADO",
+                "ASSIGNMENT",
+                employeeId,
+                "Pedido asignado a empleado para preparación"
+        );
+
+        return updatedOrder;
     }
 
     @Override
     @Transactional
     public OrderModel markOrderAsReady(Long orderId) {
         OrderModel order = findOrderById(orderId);
+        Long employeeId = securityContextPort.getCurrentUserId();
         validateEmployeeBelongsToRestaurant(order);
 
         // Validar que el estado actual sea IN_PREPARE
@@ -98,12 +134,28 @@ public class OrderUseCase implements IOrderServicePort {
             throw new InvalidOrderStatusException(ExceptionResponse.ORDER_INVALID_STATUS_FOR_READY.getMessage());
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
+
         // Obtener información del cliente para enviar SMS
         UserResponseModel client = getClientWithValidPhone(order.getClient());
 
         // Cambiar estado a READY
         order.setStatus(OrderStatusEnum.READY);
         OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Registrar auditoría de pedido listo
+        registerAudit(
+                updatedOrder.getId(),
+                updatedOrder.getRestaurant().getId(),
+                updatedOrder.getClient(),
+                previousStatus,
+                OrderStatusEnum.READY,
+                employeeId,
+                "EMPLEADO",
+                "READY_FOR_PICKUP",
+                employeeId,
+                "Pedido marcado como listo para recoger"
+        );
 
         // Enviar SMS al cliente con el PIN de seguridad
         sendOrderReadyNotification(client, updatedOrder);
@@ -120,6 +172,7 @@ public class OrderUseCase implements IOrderServicePort {
         }
 
         OrderModel order = findOrderById(orderId);
+        Long employeeId = securityContextPort.getCurrentUserId();
         validateEmployeeBelongsToRestaurant(order);
 
         // Validar que el estado actual sea READY
@@ -132,9 +185,27 @@ public class OrderUseCase implements IOrderServicePort {
             throw new InvalidSecurityPinException(ExceptionResponse.ORDER_INVALID_SECURITY_PIN.getMessage());
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
+
         // Actualizar el estado a DELIVERED
         order.setStatus(OrderStatusEnum.DELIVERED);
-        return orderPersistencePort.updateOrder(order);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Registrar auditoría de entrega
+        registerAudit(
+                updatedOrder.getId(),
+                updatedOrder.getRestaurant().getId(),
+                updatedOrder.getClient(),
+                previousStatus,
+                OrderStatusEnum.DELIVERED,
+                employeeId,
+                "EMPLEADO",
+                "DELIVERED",
+                employeeId,
+                "Pedido entregado al cliente con PIN verificado"
+        );
+
+        return updatedOrder;
     }
 
     @Override
@@ -153,12 +224,28 @@ public class OrderUseCase implements IOrderServicePort {
             throw new OrderCancellationException(ExceptionResponse.ORDER_CANCELLATION_NOT_ALLOWED.getMessage());
         }
 
+        OrderStatusEnum previousStatus = order.getStatus();
+
         // Obtener información del cliente para enviar SMS
         UserResponseModel client = getClientWithValidPhone(order.getClient());
 
         // Actualizar el estado a CANCELLED
         order.setStatus(OrderStatusEnum.CANCELLED);
         OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Registrar auditoría de cancelación
+        registerAudit(
+                updatedOrder.getId(),
+                updatedOrder.getRestaurant().getId(),
+                updatedOrder.getClient(),
+                previousStatus,
+                OrderStatusEnum.CANCELLED,
+                currentUserId,
+                "CLIENTE",
+                "CANCELLATION",
+                null,
+                "Pedido cancelado por el cliente"
+        );
 
         // Enviar notificación de cancelación al cliente
         sendOrderCancelledNotification(client, updatedOrder);
@@ -291,6 +378,30 @@ public class OrderUseCase implements IOrderServicePort {
             pin.append(DIGITS.charAt(RANDOM.nextInt(DIGITS.length())));
         }
         return pin.toString();
+    }
+
+    /**
+     * Registra un cambio de estado en el servicio de auditoría
+     * Delegación pura - sin lógica de negocio
+     */
+    private void registerAudit(
+            Long orderId,
+            Long restaurantId,
+            Long clientId,
+            OrderStatusEnum previousStatus,
+            OrderStatusEnum newStatus,
+            Long changedByUserId,
+            String changedByRole,
+            String actionType,
+            Long employeeId,
+            String notes
+    ) {
+        orderAuditPort.registerStatusChange(
+                orderId, restaurantId, clientId,
+                previousStatus, newStatus,
+                changedByUserId, changedByRole,
+                actionType, employeeId, notes
+        );
     }
 
 }

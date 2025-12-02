@@ -35,3 +35,8 @@ users:
   service:
     url: ${USERS_SERVICE_URL:http://localhost:8081}
 
+# Configuración del microservicio de auditoría
+audit:
+  service:
+    url: ${AUDIT_SERVICE_URL:http://localhost:8083}
+
