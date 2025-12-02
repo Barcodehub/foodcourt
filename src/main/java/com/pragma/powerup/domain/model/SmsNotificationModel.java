@@ -5,16 +5,14 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.Map;
+
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserResponseModel {
-    private Long id;
-    private String name;
-    private String lastName;
-    private String email;
+public class SmsNotificationModel {
     private String phoneNumber;
-    private String role;
-    private Long restaurantWorkId;
+    private String message;
+    private Map<String, String> metadata;
 }

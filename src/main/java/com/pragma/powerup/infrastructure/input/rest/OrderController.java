@@ -42,6 +42,13 @@ public class OrderController implements OrdersApi {
 
     @Override
     @RequireRole(RoleEnum.EMPLEADO)
+    public ResponseEntity<OrderDataResponseDto> markOrderAsReady(Long orderId) {
+        OrderDataResponseDto responseDto = orderHandler.markOrderAsReady(orderId);
+        return ResponseEntity.ok(responseDto);
+    }
+
+    @Override
+    @RequireRole(RoleEnum.EMPLEADO)
     public ResponseEntity<OrderDataResponseDto> deliverOrder(Long orderId, DeliverOrderRequestDto deliverOrderRequestDto) {
         OrderDataResponseDto responseDto = orderHandler.deliverOrder(orderId, deliverOrderRequestDto.getSecurityPin());
         return ResponseEntity.ok(responseDto);

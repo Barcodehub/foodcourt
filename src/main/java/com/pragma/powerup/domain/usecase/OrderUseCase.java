@@ -4,11 +4,13 @@ import com.pragma.powerup.domain.api.IOrderServicePort;
 import com.pragma.powerup.domain.enums.OrderStatusEnum;
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.OrderModel;
+import com.pragma.powerup.domain.model.SmsNotificationModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
+import com.pragma.powerup.domain.spi.ISmsNotificationPort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
 import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
 import jakarta.transaction.Transactional;
@@ -17,6 +19,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import java.security.SecureRandom;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor
@@ -31,6 +35,7 @@ public class OrderUseCase implements IOrderServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final ISecurityContextPort securityContextPort;
     private final IUserValidationPort userValidationPort;
+    private final ISmsNotificationPort smsNotificationPort;
 
 
     @Override
@@ -47,14 +52,8 @@ public class OrderUseCase implements IOrderServicePort {
     @Override
     public Page<OrderModel> listOrdersByStatusAndRestaurant(String status, Pageable pageable) {
         Long userId = securityContextPort.getCurrentUserId();
+        UserResponseModel user = getUserById(userId);
 
-        // Obtener información del empleado desde el microservicio de usuarios
-        Optional<UserResponseModel> userOptional = userValidationPort.getUserById(userId);
-        if (userOptional.isEmpty()) {
-            throw new RestaurantNotFoundException(ExceptionResponse.USER_NOT_FOUND_IN_SERVICE.getMessage());
-        }
-
-        UserResponseModel user = userOptional.get();
         if (user.getRestaurantWorkId() == null) {
             throw new RestaurantNotFoundException(ExceptionResponse.EMPLOYEE_NO_RESTAURANT.getMessage());
         }
@@ -73,11 +72,7 @@ public class OrderUseCase implements IOrderServicePort {
     @Override
     @Transactional
     public OrderModel assignOrderToEmployee(Long orderId) {
-        // Obtener la orden
-        OrderModel order = orderPersistencePort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ExceptionResponse.ORDER_NOT_FOUND.getMessage()));
-
-        // Validar que el empleado pertenezca al restaurante de la orden
+        OrderModel order = findOrderById(orderId);
         Long employeeId = securityContextPort.getCurrentUserId();
         validateEmployeeBelongsToRestaurant(order);
 
@@ -94,17 +89,37 @@ public class OrderUseCase implements IOrderServicePort {
 
     @Override
     @Transactional
+    public OrderModel markOrderAsReady(Long orderId) {
+        OrderModel order = findOrderById(orderId);
+        validateEmployeeBelongsToRestaurant(order);
+
+        // Validar que el estado actual sea IN_PREPARE
+        if (order.getStatus() != OrderStatusEnum.IN_PREPARE) {
+            throw new InvalidOrderStatusException(ExceptionResponse.ORDER_INVALID_STATUS_FOR_READY.getMessage());
+        }
+
+        // Obtener información del cliente para enviar SMS
+        UserResponseModel client = getClientWithValidPhone(order.getClient());
+
+        // Cambiar estado a READY
+        order.setStatus(OrderStatusEnum.READY);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Enviar SMS al cliente con el PIN de seguridad
+        sendOrderReadyNotification(client, updatedOrder);
+
+        return updatedOrder;
+    }
+
+    @Override
+    @Transactional
     public OrderModel deliverOrder(Long orderId, String securityPin) {
         // Validar que el PIN no sea nulo o vacío
         if (securityPin == null || securityPin.trim().isEmpty()) {
             throw new InvalidSecurityPinException(ExceptionResponse.ORDER_SECURITY_PIN_REQUIRED.getMessage());
         }
 
-        // Obtener la orden
-        OrderModel order = orderPersistencePort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ExceptionResponse.ORDER_NOT_FOUND.getMessage()));
-
-        // Validar que el empleado pertenezca al restaurante de la orden
+        OrderModel order = findOrderById(orderId);
         validateEmployeeBelongsToRestaurant(order);
 
         // Validar que el estado actual sea READY
@@ -125,9 +140,7 @@ public class OrderUseCase implements IOrderServicePort {
     @Override
     @Transactional
     public OrderModel cancelOrder(Long orderId) {
-        // Obtener la orden
-        OrderModel order = orderPersistencePort.findById(orderId)
-                .orElseThrow(() -> new OrderNotFoundException(ExceptionResponse.ORDER_NOT_FOUND.getMessage()));
+        OrderModel order = findOrderById(orderId);
 
         // Validar que el cliente que cancela sea el dueño de la orden
         Long currentUserId = securityContextPort.getCurrentUserId();
@@ -140,9 +153,17 @@ public class OrderUseCase implements IOrderServicePort {
             throw new OrderCancellationException(ExceptionResponse.ORDER_CANCELLATION_NOT_ALLOWED.getMessage());
         }
 
+        // Obtener información del cliente para enviar SMS
+        UserResponseModel client = getClientWithValidPhone(order.getClient());
+
         // Actualizar el estado a CANCELLED
         order.setStatus(OrderStatusEnum.CANCELLED);
-        return orderPersistencePort.updateOrder(order);
+        OrderModel updatedOrder = orderPersistencePort.updateOrder(order);
+
+        // Enviar notificación de cancelación al cliente
+        sendOrderCancelledNotification(client, updatedOrder);
+
+        return updatedOrder;
     }
 
     private void validOneOrderByUser(OrderModel orderModel) {
@@ -156,14 +177,8 @@ public class OrderUseCase implements IOrderServicePort {
 
     private void validateEmployeeBelongsToRestaurant(OrderModel order) {
         Long employeeId = securityContextPort.getCurrentUserId();
+        UserResponseModel employee = getUserById(employeeId);
 
-        // Obtener información del empleado desde el microservicio de usuarios
-        Optional<UserResponseModel> userOptional = userValidationPort.getUserById(employeeId);
-        if (userOptional.isEmpty()) {
-            throw new UnauthorizedOperationException(ExceptionResponse.EMPLOYEE_NOT_FOUND.getMessage());
-        }
-
-        UserResponseModel employee = userOptional.get();
         if (employee.getRestaurantWorkId() == null) {
             throw new UnauthorizedOperationException(ExceptionResponse.EMPLOYEE_NO_RESTAURANT.getMessage());
         }
@@ -172,6 +187,102 @@ public class OrderUseCase implements IOrderServicePort {
         if (!employee.getRestaurantWorkId().equals(order.getRestaurant().getId())) {
             throw new UnauthorizedOperationException(ExceptionResponse.EMPLOYEE_WRONG_RESTAURANT.getMessage());
         }
+    }
+
+    /**
+     * Obtiene una orden por su ID
+     * @param orderId ID de la orden
+     * @return OrderModel encontrado
+     * @throws OrderNotFoundException si la orden no existe
+     */
+    private OrderModel findOrderById(Long orderId) {
+        return orderPersistencePort.findById(orderId)
+                .orElseThrow(() -> new OrderNotFoundException(ExceptionResponse.ORDER_NOT_FOUND.getMessage()));
+    }
+
+    /**
+     * Obtiene un usuario por su ID
+     * @param userId ID del usuario
+     * @return UserResponseModel encontrado
+     * @throws OrderNotFoundException si el usuario no existe
+     */
+    private UserResponseModel getUserById(Long userId) {
+        return userValidationPort.getUserById(userId)
+                .orElseThrow(() -> new OrderNotFoundException(ExceptionResponse.USER_NOT_FOUND_IN_SERVICE.getMessage()));
+    }
+
+    /**
+     * Obtiene un cliente y valida que tenga número de teléfono
+     * @param clientId ID del cliente
+     * @return UserResponseModel con teléfono válido
+     * @throws InvalidOrderStatusException si el cliente no tiene teléfono
+     */
+    private UserResponseModel getClientWithValidPhone(Long clientId) {
+        UserResponseModel client = getUserById(clientId);
+
+        if (client.getPhoneNumber() == null || client.getPhoneNumber().trim().isEmpty()) {
+            throw new InvalidOrderStatusException(ExceptionResponse.ORDER_CLIENT_PHONE_NOT_FOUND.getMessage());
+        }
+
+        return client;
+    }
+
+    /**
+     * Envía notificación SMS genérica al cliente
+     * @param client Información del cliente
+     * @param message Mensaje a enviar
+     * @param order Orden relacionada
+     */
+    private void sendSmsNotification(UserResponseModel client, String message, OrderModel order) {
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("orderId", order.getId().toString());
+        metadata.put("restaurantName", order.getRestaurant().getName());
+
+        SmsNotificationModel smsNotification = new SmsNotificationModel(
+                client.getPhoneNumber(),
+                message,
+                metadata
+        );
+
+        smsNotificationPort.sendSms(smsNotification);
+    }
+
+    /**
+     * Envía notificación cuando el pedido está listo
+     */
+    private void sendOrderReadyNotification(UserResponseModel client, OrderModel order) {
+        String message = String.format(
+                "Hola %s, tu pedido está listo para ser recogido en %s. Tu PIN de seguridad es: %s",
+                client.getName(),
+                order.getRestaurant().getName(),
+                order.getSecurityPin()
+        );
+
+        Map<String, String> metadata = new HashMap<>();
+        metadata.put("orderId", order.getId().toString());
+        metadata.put("restaurantName", order.getRestaurant().getName());
+        metadata.put("securityPin", order.getSecurityPin());
+
+        SmsNotificationModel smsNotification = new SmsNotificationModel(
+                client.getPhoneNumber(),
+                message,
+                metadata
+        );
+
+        smsNotificationPort.sendSms(smsNotification);
+    }
+
+    /**
+     * Envía notificación cuando el pedido es cancelado
+     */
+    private void sendOrderCancelledNotification(UserResponseModel client, OrderModel order) {
+        String message = String.format(
+                "Hola %s, tu pedido en %s ha sido cancelado exitosamente.",
+                client.getName(),
+                order.getRestaurant().getName()
+        );
+
+        sendSmsNotification(client, message, order);
     }
 
     private String generateSecurityPin() {

@@ -9,6 +9,8 @@ public interface IOrderHandler {
 
     OrderDataResponseDto assignOrderToEmployee(Long orderId);
 
+    OrderDataResponseDto markOrderAsReady(Long orderId);
+
     OrderDataResponseDto deliverOrder(Long orderId, String securityPin);
 
     OrderDataResponseDto cancelOrder(Long orderId);

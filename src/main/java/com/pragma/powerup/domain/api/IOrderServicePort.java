@@ -10,6 +10,7 @@ public interface IOrderServicePort {
     OrderModel createOrder(OrderModel orderModel);
     Page<OrderModel> listOrdersByStatusAndRestaurant(String status, Pageable pageable);
     OrderModel assignOrderToEmployee(Long orderId);
+    OrderModel markOrderAsReady(Long orderId);
     OrderModel deliverOrder(Long orderId, String securityPin);
     OrderModel cancelOrder(Long orderId);
 }

@@ -55,6 +55,17 @@ public class OrderHandler implements IOrderHandler {
     }
 
     @Override
+    public OrderDataResponseDto markOrderAsReady(Long orderId) {
+        OrderModel readyOrder = orderServicePort.markOrderAsReady(orderId);
+        OrderResponseDto responseDto = orderMapper.toResponseDto(readyOrder);
+
+        OrderDataResponseDto dataResponse = new OrderDataResponseDto();
+        dataResponse.setData(responseDto);
+        dataResponse.setMessage("Orden marcada como lista y notificación SMS enviada al cliente");
+        return dataResponse;
+    }
+
+    @Override
     public OrderDataResponseDto deliverOrder(Long orderId, String securityPin) {
         OrderModel deliveredOrder = orderServicePort.deliverOrder(orderId, securityPin);
         OrderResponseDto responseDto = orderMapper.toResponseDto(deliveredOrder);
