@@ -298,6 +298,56 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+    get:
+      tags:
+        - Orders
+      summary: Listar pedidos por estado y restaurante del empleado
+      description: Devuelve la lista de pedidos filtrados por estado, paginados, mostrando todos los campos, únicamente del restaurante al que pertenece el empleado autenticado.
+      operationId: listOrdersByStatusAndRestaurant
+      parameters:
+        - name: status
+          in: query
+          description: "Estado por el que filtrar los pedidos. Ejemplo: PENDING, READY, DELIVERED"
+          required: false
+          schema:
+            type: string
+            example: PENDING
+        - name: page
+          in: query
+          description: Número de página (empezando en 0)
+          required: false
+          schema:
+            type: integer
+            default: 0
+            minimum: 0
+        - name: size
+          in: query
+          description: Cantidad de elementos por página
+          required: false
+          schema:
+            type: integer
+            default: 10
+            minimum: 1
+            maximum: 100
+      responses:
+        '200':
+          description: Lista de pedidos obtenida exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderListResponse'
+        '401':
+          description: No autorizado (empleado no autenticado)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
 components:
   schemas:
@@ -679,3 +729,32 @@ components:
         message:
           type: string
           example: "Orden creada exitosamente"
+
+    OrderListResponse:
+      type: object
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/OrderResponse'
+        page:
+          type: integer
+          description: Número de página actual
+          example: 0
+        size:
+          type: integer
+          description: Cantidad de elementos por página
+          example: 10
+        totalElements:
+          type: integer
+          format: int64
+          description: Total de elementos
+          example: 50
+        totalPages:
+          type: integer
+          description: Total de páginas
+          example: 5
+        last:
+          type: boolean
+          description: Indica si es la última página
+          example: false

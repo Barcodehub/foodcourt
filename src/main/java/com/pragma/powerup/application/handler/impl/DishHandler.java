@@ -59,7 +59,6 @@ public class DishHandler implements IDishHandler {
 
     @Override
     public DishListResponseDto listDishesByRestaurant(Long restaurantId, String category, Integer page, Integer size) {
-        // Convertir la categoría de String a Enum si se proporciona
         CategoryEnum categoryEnum = null;
         if (category != null && !category.isEmpty()) {
             categoryEnum = CategoryEnum.valueOf(category);

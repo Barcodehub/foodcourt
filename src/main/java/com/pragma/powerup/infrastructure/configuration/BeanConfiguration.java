@@ -33,7 +33,8 @@ public class BeanConfiguration {
             IOrderPersistencePort orderPersistencePort,
             IDishPersistencePort dishPersistencePort,
             IRestaurantPersistencePort restaurantPersistencePort,
-            ISecurityContextPort securityContextPort) {
-        return new OrderUseCase(orderPersistencePort, dishPersistencePort, restaurantPersistencePort, securityContextPort);
+            ISecurityContextPort securityContextPort,
+            IUserValidationPort userValidationPort) {
+        return new OrderUseCase(orderPersistencePort, dishPersistencePort, restaurantPersistencePort, securityContextPort, userValidationPort);
     }
 }

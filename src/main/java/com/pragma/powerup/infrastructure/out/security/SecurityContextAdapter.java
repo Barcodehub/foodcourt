@@ -28,5 +28,10 @@ public class SecurityContextAdapter implements ISecurityContextPort {
     public boolean hasRole(String roleName) {
         return securityContextUtil.hasRole(roleName);
     }
+
+    @Override
+    public String getCurrentUserName() {
+        return securityContextUtil.getCurrentUserName();
+    }
 }
 

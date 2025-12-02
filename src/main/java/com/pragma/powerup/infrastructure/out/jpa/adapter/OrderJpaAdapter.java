@@ -7,6 +7,8 @@ import com.pragma.powerup.infrastructure.out.jpa.entity.OrderEntity;
 import com.pragma.powerup.infrastructure.out.jpa.mapper.IOrderEntityMapper;
 import com.pragma.powerup.infrastructure.out.jpa.repository.IOrderRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
@@ -31,5 +33,16 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
                 .map(orderEntityMapper::toDomain);
     }
 
+    @Override
+    public Page<OrderModel> listOrdersByStatusAndRestaurant(OrderStatusEnum status, Long restaurantId, Pageable pageable) {
+        Page<OrderEntity> entities = orderRepository.findByStatusAndRestaurantId(status, restaurantId, pageable);
+        return entities.map(orderEntityMapper::toDomain);
+    }
+
+    @Override
+    public Page<OrderModel> listOrdersByRestaurant(Long restaurantId, Pageable pageable) {
+        Page<OrderEntity> entities = orderRepository.findByRestaurantId(restaurantId, pageable);
+        return entities.map(orderEntityMapper::toDomain);
+    }
 
 }

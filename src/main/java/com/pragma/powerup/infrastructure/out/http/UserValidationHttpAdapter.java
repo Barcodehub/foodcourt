@@ -65,6 +65,10 @@ public class UserValidationHttpAdapter implements IUserValidationPort {
                 user.setEmail((String) userData.get("email"));
                 user.setRole(roleName);
 
+                if (userData.containsKey("restaurantWorkId") && userData.get("restaurantWorkId") != null) {
+                    user.setRestaurantWorkId(((Number) userData.get("restaurantWorkId")).longValue());
+                }
+
                 return Optional.of(user);
             }
 

@@ -2,6 +2,7 @@ package com.pragma.powerup.infrastructure.exceptionhandler;
 
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.infrastructure.exception.NoDataFoundException;
+import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -235,6 +236,22 @@ public class ControllerAdvisor {
         response.put(MESSAGE, ExceptionResponse.VALIDATION_FAILED.getMessage());
         response.put("errors", errors);
 
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<Map<String, Object>> handleConstraintViolationException(ConstraintViolationException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        response.put(ERROR, "Validation Error");
+        response.put(MESSAGE, ExceptionResponse.VALIDATION_FAILED.getMessage());
+        response.put("violations", exception.getConstraintViolations().stream()
+                .map(v -> Map.of(
+                        "property", v.getPropertyPath().toString(),
+                        "invalidValue", v.getInvalidValue(),
+                        "message", v.getMessage()
+                )).toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 

@@ -15,4 +15,5 @@ public class UserResponseModel {
     private String lastName;
     private String email;
     private String role;
+    private Long restaurantWorkId;
 }

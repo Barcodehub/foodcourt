@@ -13,77 +13,62 @@ import java.util.Map;
 public class SecurityContextUtil {
 
     private final HttpServletRequest request;
-    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final ObjectMapper objectMapper;
 
     /**
-     * Decodifica el token JWT del header Authorization y extrae el claim "role"
+     * Decodifica el token JWT del header Authorization y extrae el payload como Map
      */
-    public String getCurrentUserRole() {
+    private Map<String, Object> getJwtClaims() {
         try {
             String token = request.getHeader("Authorization");
             if (token == null || !token.startsWith("Bearer ")) {
                 return null;
             }
-
-            // Extraer el token sin el prefijo "Bearer "
             String jwtToken = token.substring(7);
-
-            // Decodificar el payload (segunda parte del JWT)
             String[] parts = jwtToken.split("\\.");
             if (parts.length < 2) {
                 return null;
             }
-
             String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-            Map<String, Object> claims = objectMapper.readValue(payload, Map.class);
-
-            // Extraer el claim "role"
-            return (String) claims.get("role");
+            return objectMapper.readValue(payload, Map.class);
         } catch (Exception e) {
             return null;
         }
     }
 
     /**
+     * Decodifica el token JWT del header Authorization y extrae el claim "role"
+     */
+    public String getCurrentUserRole() {
+        Map<String, Object> claims = getJwtClaims();
+        return claims != null ? (String) claims.get("role") : null;
+    }
+
+    /**
      * Decodifica el token JWT del header Authorization y extrae el claim "userId"
      */
     public Long getCurrentUserId() {
-        try {
-            String token = request.getHeader("Authorization");
-            if (token == null || !token.startsWith("Bearer ")) {
-                throw new RuntimeException("Usuario no autenticado");
-            }
-
-            // Extraer el token sin el prefijo "Bearer "
-            String jwtToken = token.substring(7);
-
-            // Decodificar el payload (segunda parte del JWT)
-            String[] parts = jwtToken.split("\\.");
-            if (parts.length < 2) {
-                throw new RuntimeException("Token JWT inválido");
-            }
-
-            String payload = new String(Base64.getUrlDecoder().decode(parts[1]));
-            Map<String, Object> claims = objectMapper.readValue(payload, Map.class);
-
-            // Extraer el claim "userId"
-            Object userIdObj = claims.get("userId");
-            if (userIdObj instanceof Number) {
-                return ((Number) userIdObj).longValue();
-            }
-            throw new RuntimeException("No se pudo obtener el ID del usuario autenticado");
-        } catch (Exception e) {
-            throw new RuntimeException("Error al obtener el ID del usuario: " + e.getMessage());
+        Map<String, Object> claims = getJwtClaims();
+        if (claims == null) {
+            throw new RuntimeException("Usuario no autenticado");
         }
+        Object userIdObj = claims.get("userId");
+        if (userIdObj instanceof Number) {
+            return ((Number) userIdObj).longValue();
+        }
+        throw new RuntimeException("No se pudo obtener el ID del usuario autenticado");
     }
 
     public boolean hasRole(String roleName) {
-        try {
-            String currentRole = getCurrentUserRole();
-            return currentRole != null && currentRole.equalsIgnoreCase(roleName);
-        } catch (Exception e) {
-            return false;
-        }
+        String currentRole = getCurrentUserRole();
+        return currentRole != null && currentRole.equalsIgnoreCase(roleName);
+    }
+
+    /**
+     * Decodifica el token JWT del header Authorization y extrae el claim "name"
+     */
+    public String getCurrentUserName() {
+        Map<String, Object> claims = getJwtClaims();
+        return claims != null ? (String) claims.get("name") : null;
     }
 }
-

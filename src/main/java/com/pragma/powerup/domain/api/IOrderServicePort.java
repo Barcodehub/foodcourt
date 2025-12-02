@@ -8,4 +8,5 @@ import org.springframework.data.domain.Pageable;
 
 public interface IOrderServicePort {
     OrderModel createOrder(OrderModel orderModel);
+    Page<OrderModel> listOrdersByStatusAndRestaurant(String status, Pageable pageable);
 }

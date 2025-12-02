@@ -25,6 +25,24 @@ public interface IOrderMapper {
     @Mapping(target = "restaurantId", source = "restaurant.id")
     OrderResponseDto toResponseDto(OrderModel model);
 
+    default OrderListResponseDto toListResponseDto(Page<OrderModel> orderPage) {
+        OrderListResponseDto responseDto = new OrderListResponseDto();
+
+        List<OrderResponseDto> orderDtos = orderPage.getContent()
+                .stream()
+                .map(this::toResponseDto)
+                .collect(Collectors.toList());
+
+        responseDto.setData(orderDtos);
+        responseDto.setPage(orderPage.getNumber());
+        responseDto.setSize(orderPage.getSize());
+        responseDto.setTotalElements(orderPage.getTotalElements());
+        responseDto.setTotalPages(orderPage.getTotalPages());
+        responseDto.setLast(orderPage.isLast());
+
+        return responseDto;
+    }
+
     default RestaurantModel mapRestaurantIdToModel(Long restaurantId) {
         if (restaurantId == null) {
             return null;
