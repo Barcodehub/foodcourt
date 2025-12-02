@@ -36,6 +36,9 @@ public class OrderEntity {
     @CreationTimestamp
     private LocalDateTime createdAt;
 
+    @Column(name = "security_pin", length = 6)
+    private String securityPin;
+
 }
 
 

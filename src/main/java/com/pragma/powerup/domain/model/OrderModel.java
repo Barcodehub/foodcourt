@@ -23,6 +23,7 @@ public class OrderModel {
     private Long client;
     private Long employee;
     private LocalDateTime createdAt;
+    private String securityPin;
 
 }
 

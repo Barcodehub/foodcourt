@@ -17,5 +17,9 @@ public interface IOrderPersistencePort {
     Page<OrderModel> listOrdersByStatusAndRestaurant(OrderStatusEnum status, Long restaurantId, Pageable pageable);
 
     Page<OrderModel> listOrdersByRestaurant(Long restaurantId, Pageable pageable);
+
+    Optional<OrderModel> findById(Long orderId);
+
+    OrderModel updateOrder(OrderModel order);
 }
 

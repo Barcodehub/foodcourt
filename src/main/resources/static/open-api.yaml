@@ -349,6 +349,136 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /orders/{orderId}/assign:
+    patch:
+      tags:
+        - Orders
+      summary: Asignarse a un pedido y cambiar estado a en preparación
+      description: Permite al empleado asignarse a un pedido pendiente y cambiar su estado a "En Preparación"
+      operationId: assignOrderToEmployee
+      parameters:
+        - name: orderId
+          in: path
+          description: ID de la orden a asignar
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Orden asignada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDataResponse'
+        '400':
+          description: La orden no puede ser asignada (no está en estado Pendiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Orden no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}/deliver:
+    patch:
+      tags:
+        - Orders
+      summary: Marcar pedido como entregado
+      description: Permite al empleado marcar un pedido como entregado validando el PIN de seguridad del cliente
+      operationId: deliverOrder
+      parameters:
+        - name: orderId
+          in: path
+          description: ID de la orden a entregar
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: PIN de seguridad del cliente
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeliverOrderRequest'
+      responses:
+        '200':
+          description: Orden marcada como entregada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDataResponse'
+        '400':
+          description: Datos de entrada inválidos o PIN incorrecto
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Orden no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /orders/{orderId}/cancel:
+    patch:
+      tags:
+        - Orders
+      summary: Cancelar pedido
+      description: Permite al cliente cancelar su pedido si está en estado Pendiente
+      operationId: cancelOrder
+      parameters:
+        - name: orderId
+          in: path
+          description: ID de la orden a cancelar
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Orden cancelada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrderDataResponse'
+        '400':
+          description: La orden no puede ser cancelada (no está en estado Pendiente)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Orden no encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     RestaurantRequest:
@@ -684,6 +814,32 @@ components:
         - dishId
         - quantity
 
+    OrderDishResponse:
+      type: object
+      properties:
+        dishId:
+          type: integer
+          format: int64
+          description: ID del plato
+          example: 5
+        quantity:
+          type: integer
+          description: Cantidad de ese plato en la orden
+          example: 2
+
+    DeliverOrderRequest:
+      type: object
+      properties:
+        securityPin:
+          type: string
+          minLength: 6
+          maxLength: 6
+          pattern: '^[0-9]{6}$'
+          description: PIN de seguridad de 6 dígitos
+          example: "123456"
+      required:
+        - securityPin
+
     OrderResponse:
       type: object
       properties:
@@ -714,7 +870,7 @@ components:
         dishes:
           type: array
           items:
-            $ref: '#/components/schemas/OrderDishRequest'
+            $ref: '#/components/schemas/OrderDishResponse'
         createdAt:
           type: string
           format: local-date-time
@@ -758,3 +914,4 @@ components:
           type: boolean
           description: Indica si es la última página
           example: false
+

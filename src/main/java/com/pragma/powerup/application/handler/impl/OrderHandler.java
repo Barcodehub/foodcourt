@@ -42,4 +42,37 @@ public class OrderHandler implements IOrderHandler {
         OrderListResponseDto responseDto = orderMapper.toListResponseDto(orderPage);
         return responseDto;
     }
+
+    @Override
+    public OrderDataResponseDto assignOrderToEmployee(Long orderId) {
+        OrderModel assignedOrder = orderServicePort.assignOrderToEmployee(orderId);
+        OrderResponseDto responseDto = orderMapper.toResponseDto(assignedOrder);
+
+        OrderDataResponseDto dataResponse = new OrderDataResponseDto();
+        dataResponse.setData(responseDto);
+        dataResponse.setMessage("Orden asignada exitosamente y estado cambiado a 'En Preparación'");
+        return dataResponse;
+    }
+
+    @Override
+    public OrderDataResponseDto deliverOrder(Long orderId, String securityPin) {
+        OrderModel deliveredOrder = orderServicePort.deliverOrder(orderId, securityPin);
+        OrderResponseDto responseDto = orderMapper.toResponseDto(deliveredOrder);
+
+        OrderDataResponseDto dataResponse = new OrderDataResponseDto();
+        dataResponse.setData(responseDto);
+        dataResponse.setMessage("Orden marcada como entregada exitosamente");
+        return dataResponse;
+    }
+
+    @Override
+    public OrderDataResponseDto cancelOrder(Long orderId) {
+        OrderModel cancelledOrder = orderServicePort.cancelOrder(orderId);
+        OrderResponseDto responseDto = orderMapper.toResponseDto(cancelledOrder);
+
+        OrderDataResponseDto dataResponse = new OrderDataResponseDto();
+        dataResponse.setData(responseDto);
+        dataResponse.setMessage("Orden cancelada exitosamente");
+        return dataResponse;
+    }
 }

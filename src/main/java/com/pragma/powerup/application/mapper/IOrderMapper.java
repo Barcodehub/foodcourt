@@ -25,6 +25,9 @@ public interface IOrderMapper {
     @Mapping(target = "restaurantId", source = "restaurant.id")
     OrderResponseDto toResponseDto(OrderModel model);
 
+    @Mapping(target = "dishId", source = "dish.id")
+    OrderDishResponseDto toResponseDto(OrderDishModel orderDishModel);
+
     default OrderListResponseDto toListResponseDto(Page<OrderModel> orderPage) {
         OrderListResponseDto responseDto = new OrderListResponseDto();
 

@@ -9,6 +9,7 @@ import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
+import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -27,16 +28,16 @@ public class RestaurantUseCase implements IRestaurantServicePort {
 
         Optional<RestaurantModel> existingRestaurant = restaurantPersistencePort.findByNit(restaurantModel.getNit());
         if (existingRestaurant.isPresent()) {
-            throw new RestaurantAlreadyExistsException("Ya existe un restaurante con el NIT: " + restaurantModel.getNit());
+            throw new RestaurantAlreadyExistsException(ExceptionResponse.RESTAURANT_ALREADY_EXISTS.getMessage());
         }
 
         Optional<UserResponseModel> user = userValidationPort.getUserById(restaurantModel.getOwnerId());
         if (user.isEmpty()) {
-            throw new UserNotFoundException("No se encontrÃ³ el usuario con ID: " + restaurantModel.getOwnerId());
+            throw new UserNotFoundException(ExceptionResponse.RESTAURANT_OWNER_NOT_FOUND.getMessage());
         }
 
         if (!userValidationPort.isUserOwner(restaurantModel.getOwnerId())) {
-            throw new UserNotOwnerException("El usuario no tiene el rol de propietario");
+            throw new UserNotOwnerException(ExceptionResponse.RESTAURANT_OWNER_INVALID_ROLE.getMessage());
         }
 
         return restaurantPersistencePort.saveRestaurant(restaurantModel);
@@ -49,11 +50,11 @@ public class RestaurantUseCase implements IRestaurantServicePort {
 
     private void validateRestaurantName(String name) {
         if (name == null || name.trim().isEmpty()) {
-            throw new InvalidRestaurantException("El nombre del restaurante no puede estar vacÃ­o");
+            throw new InvalidRestaurantException(ExceptionResponse.RESTAURANT_NAME_EMPTY.getMessage());
         }
 
         if (name.matches("^[0-9]+$")) {
-            throw new InvalidRestaurantException("El nombre del restaurante no puede contener solo nÃºmeros");
+            throw new InvalidRestaurantException(ExceptionResponse.RESTAURANT_NAME_NUMERIC.getMessage());
         }
     }
 }
