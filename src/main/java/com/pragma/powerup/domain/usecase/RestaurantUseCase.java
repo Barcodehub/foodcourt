@@ -1,6 +1,7 @@
 package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.api.IRestaurantServicePort;
+import com.pragma.powerup.domain.enums.RoleEnum;
 import com.pragma.powerup.domain.exception.InvalidRestaurantException;
 import com.pragma.powerup.domain.exception.RestaurantAlreadyExistsException;
 import com.pragma.powerup.domain.exception.UserNotFoundException;
@@ -10,6 +11,7 @@ import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
 import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
+import com.pragma.powerup.infrastructure.security.annotations.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -22,6 +24,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IUserValidationPort userValidationPort;
 
+    @RequireRole(RoleEnum.ADMINISTRADOR)
     @Override
     public RestaurantModel createRestaurant(RestaurantModel restaurantModel) {
         validateRestaurantName(restaurantModel.getName());

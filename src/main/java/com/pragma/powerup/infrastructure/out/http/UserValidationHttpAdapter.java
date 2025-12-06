@@ -2,6 +2,7 @@ package com.pragma.powerup.infrastructure.out.http;
 
 import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
+import com.pragma.powerup.infrastructure.exception.RemoteServiceException;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,8 +12,12 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.http.HttpStatus;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.Map;
 import java.util.Optional;
 
@@ -74,6 +79,28 @@ public class UserValidationHttpAdapter implements IUserValidationPort {
             }
 
             return Optional.empty();
+        } catch (HttpClientErrorException e) {
+            // Manejo de errores específicos del cliente HTTP
+            String errorMessage = "Error desconocido";
+            try {
+                String responseBody = e.getResponseBodyAsString();
+                if (responseBody != null && !responseBody.isEmpty()) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    Map<String, Object> errorMap = mapper.readValue(responseBody, Map.class);
+                    if (errorMap.containsKey("message")) {
+                        errorMessage = errorMap.get("message").toString();
+                    } else if (errorMap.containsKey("error")) {
+                        errorMessage = errorMap.get("error").toString();
+                    }
+                }
+            } catch (IOException ex) {
+                // Si falla el parseo, se usa el mensaje por defecto
+            }
+            HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
+            if (status == null) {
+                status = HttpStatus.INTERNAL_SERVER_ERROR;
+            }
+            throw new RemoteServiceException(errorMessage, status);
         } catch (Exception e) {
             return Optional.empty();
         }

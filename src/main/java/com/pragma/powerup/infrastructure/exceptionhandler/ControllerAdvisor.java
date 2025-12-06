@@ -2,6 +2,7 @@ package com.pragma.powerup.infrastructure.exceptionhandler;
 
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.infrastructure.exception.NoDataFoundException;
+import com.pragma.powerup.infrastructure.exception.RemoteServiceException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -337,5 +338,17 @@ public class ControllerAdvisor {
         body.put("timestamp", LocalDateTime.now());
         body.put("status", HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
         return new ResponseEntity<>(body, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
+    }
+
+
+
+    @ExceptionHandler(RemoteServiceException.class)
+    public ResponseEntity<Map<String, Object>> handleRemoteServiceException(RemoteServiceException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, exception.getStatus().value());
+        response.put(ERROR, exception.getStatus().getReasonPhrase());
+        response.put(MESSAGE, exception.getMessage());
+        return ResponseEntity.status(exception.getStatus()).body(response);
     }
 }
