@@ -35,9 +35,6 @@ dependencies {
 
 	implementation "org.postgresql:postgresql:${postgresqlVersion}"
 
-	// Spring Security (solo core para AccessDeniedException)
-	implementation 'org.springframework.boot:spring-boot-starter-security'
-	implementation 'org.springframework.security:spring-security-core:6.2.0'
 
 	// AspectJ para anotaciones de seguridad
 	implementation 'org.springframework.boot:spring-boot-starter-aop'

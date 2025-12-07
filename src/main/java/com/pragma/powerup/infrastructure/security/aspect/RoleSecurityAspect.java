@@ -1,5 +1,6 @@
 package com.pragma.powerup.infrastructure.security.aspect;
 
+import com.pragma.powerup.domain.exception.ForbiddenException;
 import com.pragma.powerup.infrastructure.security.annotations.RequireRole;
 import com.pragma.powerup.infrastructure.security.util.SecurityContextUtil;
 import lombok.RequiredArgsConstructor;
@@ -31,7 +32,7 @@ public class RoleSecurityAspect {
         log.info("¿Tiene el rol requerido? {}", hasRequiredRole);
 
         if (!hasRequiredRole) {
-            throw new org.springframework.security.access.AccessDeniedException(
+            throw new ForbiddenException(
                 "No tiene permisos para realizar esta acción. Rol requerido: "
                 + Arrays.toString(requireRole.value()));
         }

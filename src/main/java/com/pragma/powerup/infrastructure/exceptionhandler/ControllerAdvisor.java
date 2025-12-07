@@ -8,7 +8,6 @@ import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -172,9 +171,9 @@ public class ControllerAdvisor {
     }
 
 
-    @ExceptionHandler(AccessDeniedException.class)
+    @ExceptionHandler(ForbiddenException.class)
     @ResponseBody
-    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
+    public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
         Map<String, Object> body = new HashMap<>();
         body.put("error", "Forbidden");
         body.put("message", ex.getMessage());
