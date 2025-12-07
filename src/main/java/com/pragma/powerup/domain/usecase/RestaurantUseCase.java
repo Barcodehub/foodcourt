@@ -24,7 +24,6 @@ public class RestaurantUseCase implements IRestaurantServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IUserValidationPort userValidationPort;
 
-    @RequireRole(RoleEnum.ADMINISTRADOR)
     @Override
     public RestaurantModel createRestaurant(RestaurantModel restaurantModel) {
         validateRestaurantName(restaurantModel.getName());

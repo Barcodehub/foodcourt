@@ -17,10 +17,11 @@ public enum ExceptionResponse {
     ORDER_INVALID_STATUS_FOR_ASSIGN("Solo los pedidos en estado 'Pendiente' pueden ser asignados a un empleado"),
     ORDER_INVALID_STATUS_FOR_READY("Solo los pedidos en estado 'En Preparación' pueden ser marcados como listos"),
     ORDER_INVALID_STATUS_FOR_DELIVERY("Solo los pedidos en estado 'Listo' pueden ser marcados como entregados"),
-    ORDER_CANCELLATION_NOT_ALLOWED("Lo sentimos, tu pedido ya está en preparación y no puede cancelarse"),
+    ORDER_CANCELLATION_NOT_ALLOWED("Lo sentimos, tu pedido ya no puede cancelarse"),
     ORDER_INVALID_SECURITY_PIN("El PIN de seguridad ingresado es incorrecto"),
     ORDER_SECURITY_PIN_REQUIRED("El PIN de seguridad es requerido"),
     ORDER_CLIENT_PHONE_NOT_FOUND("No se pudo obtener el número de teléfono del cliente"),
+    EMPLOYEE_NOT_ASSIGNED_TO_ORDER("El empleado no está asignado a esta orden"),
 
     // Authorization messages
     UNAUTHORIZED_ORDER_OPERATION("No tiene permisos para modificar esta orden"),

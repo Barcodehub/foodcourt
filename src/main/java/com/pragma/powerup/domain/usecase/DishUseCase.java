@@ -27,7 +27,6 @@ public class DishUseCase implements IDishServicePort {
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final ISecurityContextPort securityContextPort;
 
-    @RequireRole(RoleEnum.PROPIETARIO)
     @Override
     public DishModel createDish(DishModel dishModel) {
         Optional<RestaurantModel> restaurant = restaurantPersistencePort.findById(dishModel.getRestaurantId());
@@ -40,7 +39,6 @@ public class DishUseCase implements IDishServicePort {
         return dishPersistencePort.saveDish(dishModel);
     }
 
-    @RequireRole(RoleEnum.PROPIETARIO)
     @Override
     public DishModel updateDish(Long dishId, DishModel dishModel) {
         DishModel dish = getValidatedDish(dishId);

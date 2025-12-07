@@ -1,8 +1,5 @@
 package com.pragma.powerup.domain.spi;
 
-/**
- * Puerto SPI para acceder al contexto de seguridad
- */
 public interface ISecurityContextPort {
 
     Long getCurrentUserId();

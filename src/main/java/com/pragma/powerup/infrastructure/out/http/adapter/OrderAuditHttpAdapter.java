@@ -60,8 +60,7 @@ public class OrderAuditHttpAdapter implements IOrderAuditPort {
             log.info("Auditoría registrada exitosamente para orden {}", orderId);
 
         } catch (Exception e) {
-            // Log del error pero no lanzamos excepción para no interrumpir el flujo del negocio
-            // La auditoría es importante pero no crítica para la operación principal
+            // no lanzamos excepción para no interrumpir el flujo del negocio
             log.error("Error al registrar auditoría para orden {}: {}",
                     orderId, e.getMessage(), e);
         }
@@ -93,7 +92,7 @@ public class OrderAuditHttpAdapter implements IOrderAuditPort {
 
         } catch (Exception e) {
             log.error("Error al consultar historial de auditoría: {}", e.getMessage(), e);
-            // En caso de error, retornar respuesta vacía
+            //  respuesta vacía
             return new OrderStatusAuditListResponseDto();
         }
     }

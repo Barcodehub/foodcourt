@@ -7,6 +7,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface IDishRepository extends JpaRepository<DishEntity, Long> {
-    Page<DishEntity> findByRestaurantId(Long restaurantId, Pageable pageable);
-    Page<DishEntity> findByRestaurantIdAndCategory(Long restaurantId, CategoryEnum category, Pageable pageable);
+    Page<DishEntity> findByRestaurantIdAndActiveIsTrue(Long restaurantId, Pageable pageable);
+    Page<DishEntity> findByRestaurantIdAndCategoryAndActiveIsTrue(Long restaurantId, CategoryEnum category, Pageable pageable);
 }

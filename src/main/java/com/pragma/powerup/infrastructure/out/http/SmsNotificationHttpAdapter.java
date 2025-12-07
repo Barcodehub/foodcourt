@@ -44,8 +44,7 @@ public class SmsNotificationHttpAdapter implements ISmsNotificationPort {
             log.info("SMS enviado exitosamente al número: {}", smsNotification.getPhoneNumber());
         } catch (Exception e) {
             log.error("Error al enviar SMS al número {}: {}", smsNotification.getPhoneNumber(), e.getMessage());
-            // No lanzamos excepción para que no bloquee el flujo principal
-            // La notificación SMS es un proceso complementario
+            // No lanzamos excepción aqui
         }
     }
 }

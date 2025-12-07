@@ -26,7 +26,7 @@ public class RestaurantController implements RestaurantsApi {
     }
 
     @Override
-    @RequireRole(RoleEnum.ADMINISTRADOR)
+    @RequireRole(RoleEnum.CLIENTE)
     public ResponseEntity<RestaurantListResponseDto> listRestaurants(Integer page, Integer size) {
         RestaurantListResponseDto response = restaurantHandler.listRestaurants(page, size);
         return ResponseEntity.ok(response);

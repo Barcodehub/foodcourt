@@ -62,7 +62,6 @@ public class OrderController implements OrdersApi {
 
     /**
      * Consulta el historial de auditoría de los pedidos del cliente autenticado
-     * Implementa el método generado por OpenAPI: getMyOrdersAuditHistory
      */
     @Override
     @RequireRole(RoleEnum.CLIENTE)

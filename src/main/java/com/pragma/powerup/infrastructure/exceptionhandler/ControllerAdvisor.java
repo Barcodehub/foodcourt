@@ -313,7 +313,6 @@ public class ControllerAdvisor {
         response.put(ERROR, HttpStatus.INTERNAL_SERVER_ERROR.getReasonPhrase());
         response.put(MESSAGE, ExceptionResponse.INTERNAL_SERVER_ERROR.getMessage());
 
-        // Log the actual exception for debugging
         exception.printStackTrace();
 
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);

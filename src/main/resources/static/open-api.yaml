@@ -19,6 +19,8 @@ paths:
       summary: Listar restaurantes
       description: Lista todos los restaurantes disponibles ordenados alfabéticamente
       operationId: listRestaurants
+      security:
+        - bearerAuth: []
       parameters:
         - name: page
           in: query
@@ -57,6 +59,8 @@ paths:
       summary: Crear un nuevo restaurante
       description: Crea un nuevo restaurante en el sistema (solo usuarios con rol propietario)
       operationId: createRestaurant
+      security:
+        - bearerAuth: []
       requestBody:
         description: Datos del restaurante a crear
         required: true
@@ -91,6 +95,8 @@ paths:
       summary: Listar platos de un restaurante
       description: Lista los platos de un restaurante específico, con paginación y filtro opcional por categoría
       operationId: listDishesByRestaurant
+      security:
+        - bearerAuth: []
       parameters:
         - name: restaurantId
           in: path
@@ -149,6 +155,8 @@ paths:
       summary: Crear un nuevo plato
       description: Crea un nuevo plato en un restaurante (solo propietario del restaurante)
       operationId: createDish
+      security:
+        - bearerAuth: []
       requestBody:
         description: Datos del plato a crear
         required: true
@@ -183,6 +191,8 @@ paths:
       summary: Actualizar precio y descripción de un plato
       description: Actualiza el precio y/o descripción de un plato (solo propietario del restaurante)
       operationId: updateDish
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -231,6 +241,8 @@ paths:
       summary: Activar o desactivar un plato
       description: Permite activar o desactivar el estado de un plato existente
       operationId: toggleDishStatus
+      security:
+        - bearerAuth: []
       parameters:
         - name: id
           in: path
@@ -272,6 +284,8 @@ paths:
       summary: Crear una nueva orden
       description: Crea una nueva orden en un restaurante
       operationId: createOrder
+      security:
+        - bearerAuth: []
       requestBody:
         description: Datos de la orden a crear
         required: true
@@ -302,8 +316,10 @@ paths:
       tags:
         - Orders
       summary: Listar pedidos por estado y restaurante del empleado
-      description: Devuelve la lista de pedidos filtrados por estado, paginados, mostrando todos los campos, únicamente del restaurante al que pertenece el empleado autenticado.
+      description: Devuelve la lista de pedidos filtrados por estado, paginados
       operationId: listOrdersByStatusAndRestaurant
+      security:
+        - bearerAuth: []
       parameters:
         - name: status
           in: query
@@ -356,6 +372,8 @@ paths:
       summary: Asignarse a un pedido y cambiar estado a en preparación
       description: Permite al empleado asignarse a un pedido pendiente y cambiar su estado a "En Preparación"
       operationId: assignOrderToEmployee
+      security:
+        - bearerAuth: []
       parameters:
         - name: orderId
           in: path
@@ -397,6 +415,8 @@ paths:
       summary: Marcar pedido como listo
       description: Permite al empleado marcar un pedido como listo y enviar notificación SMS al cliente con el PIN de seguridad
       operationId: markOrderAsReady
+      security:
+        - bearerAuth: []
       parameters:
         - name: orderId
           in: path
@@ -438,6 +458,8 @@ paths:
       summary: Marcar pedido como entregado
       description: Permite al empleado marcar un pedido como entregado validando el PIN de seguridad del cliente
       operationId: deliverOrder
+      security:
+        - bearerAuth: []
       parameters:
         - name: orderId
           in: path
@@ -486,6 +508,8 @@ paths:
       summary: Cancelar pedido
       description: Permite al cliente cancelar su pedido si está en estado Pendiente
       operationId: cancelOrder
+      security:
+        - bearerAuth: []
       parameters:
         - name: orderId
           in: path
@@ -529,6 +553,8 @@ paths:
         Permite al cliente autenticado consultar el historial de cambios de estado de sus propios pedidos.
         El cliente solo puede ver auditorías de sus propios pedidos (seguridad automática por token).
       operationId: getMyOrdersAuditHistory
+      security:
+        - bearerAuth: []
       parameters:
         - name: orderId
           in: query
@@ -810,6 +836,23 @@ components:
           description: ID del restaurante
           example: 1
 
+    DishResponseLite:
+      type: object
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del plato
+          example: 1
+        name:
+          type: string
+          description: Nombre del plato
+          example: "Bandeja Paisa"
+        price:
+          type: integer
+          description: Precio del plato
+          example: 25000
+
     ToggleDishResponse:
         type: object
         properties:
@@ -922,11 +965,8 @@ components:
     OrderDishResponse:
       type: object
       properties:
-        dishId:
-          type: integer
-          format: int64
-          description: ID del plato
-          example: 5
+        dish:
+          $ref: '#/components/schemas/DishResponseLite'
         quantity:
           type: integer
           description: Cantidad de ese plato en la orden
@@ -1131,9 +1171,9 @@ components:
           example: "EMPLEADO"
         changedAt:
           type: string
-          format: date-time
+          format: local-date-time
           description: Fecha y hora del cambio
-          example: "2025-12-02T10:30:00Z"
+          example: "2025-12-02T10:30:00"
         actionType:
           type: string
           description: Tipo de acción realizada
@@ -1196,4 +1236,11 @@ components:
             $ref: '#/components/schemas/OrderStatusAuditResponse'
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: "Autenticación mediante token JWT. Formato: 'Bearer {token}'"
 

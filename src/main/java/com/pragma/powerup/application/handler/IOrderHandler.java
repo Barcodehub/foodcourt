@@ -17,8 +17,5 @@ public interface IOrderHandler {
 
     OrderDataResponseDto cancelOrder(Long orderId);
 
-    /**
-     * Consulta el historial de auditoría de los pedidos del cliente autenticado
-     */
     OrderStatusAuditListResponseDto getMyOrdersAuditHistory(Long orderId, List<String> actionTypes, Integer page, Integer size);
 }

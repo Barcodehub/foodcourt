@@ -94,7 +94,7 @@ public class UserValidationHttpAdapter implements IUserValidationPort {
                     }
                 }
             } catch (IOException ex) {
-                // Si falla el parseo, se usa el mensaje por defecto
+                // mensaje
             }
             HttpStatus status = HttpStatus.resolve(e.getStatusCode().value());
             if (status == null) {

@@ -42,9 +42,9 @@ public class DishJpaAdapter implements IDishPersistencePort {
     public Page<DishModel> findByRestaurantId(Long restaurantId, CategoryEnum category, Pageable pageable) {
         Page<DishEntity> entities;
         if (category != null) {
-            entities = dishRepository.findByRestaurantIdAndCategory(restaurantId, category, pageable);
+            entities = dishRepository.findByRestaurantIdAndCategoryAndActiveIsTrue(restaurantId, category, pageable);
         } else {
-            entities = dishRepository.findByRestaurantId(restaurantId, pageable);
+            entities = dishRepository.findByRestaurantIdAndActiveIsTrue(restaurantId, pageable);
         }
         return entities.map(dishEntityMapper::toDomain);
     }

@@ -100,10 +100,8 @@ public class OrderHandler implements IOrderHandler {
             Integer page,
             Integer size
     ) {
-        // Obtener el ID del cliente autenticado
         Long clientId = securityContextPort.getCurrentUserId();
 
-        // Delegar la consulta al puerto de auditoría
         return orderAuditPort.getAuditHistory(
                 clientId,
                 orderId,
