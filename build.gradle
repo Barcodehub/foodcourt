@@ -32,6 +32,8 @@ dependencies {
 	implementation "org.springframework.boot:spring-boot-starter-web:${springBootVersion}"
 	developmentOnly "org.springframework.boot:spring-boot-devtools:${springBootVersion}"
 	testImplementation "org.springframework.boot:spring-boot-starter-test:${springBootVersion}"
+	// WireMock para tests de adaptadores HTTP
+	testImplementation 'com.github.tomakehurst:wiremock-jre8:2.35.0'
 
 	implementation "org.postgresql:postgresql:${postgresqlVersion}"
 

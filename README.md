@@ -2,7 +2,7 @@
 <div align="center">
 <h3 align="center">PRAGMA POWER-UP - FOOD COURT MICROSERVICE</h3>
   <p align="center">
-    Microservicio de gestión de restaurantes y platos. Permite a administradores crear restaurantes y a propietarios gestionar los platos de sus restaurantes.
+    Microservicio principal de gestión de plazoleta de comidas. Administra restaurantes, platos, pedidos y métricas de eficiencia.
   </p>
 </div>
 
@@ -14,14 +14,21 @@
 * ![JWT](https://img.shields.io/badge/JWT-black?style=for-the-badge&logo=JSON%20web%20tokens)
 * ![Gradle](https://img.shields.io/badge/Gradle-02303A.svg?style=for-the-badge&logo=Gradle&logoColor=white)
 * ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+* ![Feign](https://img.shields.io/badge/Feign-Client-green?style=for-the-badge)
 
-## Descripción
+## Descripción General
 
-Este microservicio es responsable de:
-- **Gestión de restaurantes**: Creación de restaurantes (solo ADMINISTRADORES)
-- **Gestión de platos**: Crear y modificar platos (solo el PROPIETARIO del restaurante)
-- **Validación de permisos**: Garantiza que solo los propietarios puedan gestionar sus restaurantes
-- **Integración**: Se comunica con el microservicio de usuarios para validar roles
+Este es el microservicio **central** del sistema de plazoleta de comidas. Gestiona toda la lógica de negocio relacionada con:
+
+- **Restaurantes**: Creación y consulta de restaurantes (solo ADMINISTRADORES)
+- **Platos**: Gestión completa del menú (crear, modificar, habilitar/deshabilitar) por PROPIETARIOS
+- **Pedidos**: Ciclo completo de pedidos desde creación hasta entrega
+- **Trazabilidad**: Integración con microservicio de auditoría para registrar cambios
+- **Notificaciones**: Envío de SMS cuando pedidos están listos
+- **Métricas**: Consulta de eficiencia de pedidos por restaurante y empleado
+
+**Puerto:** 8082  
+**Base de datos:** PostgreSQL (powerup_foodcourt)
 
 ### Arquitectura
 
@@ -40,146 +47,559 @@ src/
 └── infrastructure/      # Adaptadores
     ├── input/rest/     # Controladores REST
     ├── out/jpa/        # Persistencia JPA
-    ├── out/feign/      # Cliente Feign (Users API)
+    ├── out/http/       # Clientes HTTP (Feign)
     └── security/       # Seguridad JWT
 ```
 
+---
 
-<!-- GETTING STARTED -->
-## Getting Started
+### Comunicación entre Microservicios
 
-To get a local copy up and running follow these steps.
-
-### Prerequisites
-
-* JDK 17 [https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html](https://www.oracle.com/java/technologies/javase/jdk17-archive-downloads.html)
-* Gradle [https://gradle.org/install/](https://gradle.org/install/)
-* PostgreSQL 14+ [https://www.postgresql.org/download/](https://www.postgresql.org/download/)
-* Microservicio de Users ejecutándose en puerto 8081
-
-### Recommended Tools
-* IntelliJ IDEA [https://www.jetbrains.com/idea/download/](https://www.jetbrains.com/idea/download/)
-* Postman [https://www.postman.com/downloads/](https://www.postman.com/downloads/)
-* DBeaver [https://dbeaver.io/download/](https://dbeaver.io/download/)
-
-### Installation
-
-1. Clone the repo
-   ```sh
-   git clone <repository-url>
-   cd foodCourt
-   ```
-
-2. Create a new database in PostgreSQL
-   ```sql
-   CREATE DATABASE powerup_foodcourt;
-   ```
-
-3. Update the database connection settings
-   ```yml
-   # src/main/resources/application-dev.yml
-   spring:
-     datasource:
-       url: jdbc:postgresql://localhost:5432/powerup_foodcourt
-       username: postgres
-       password: your_password
-   ```
-
-4. Configure .env file (copiar de .env.example)
-   ```sh
-   # URL del microservicio de usuarios
-   USERS_API_URL=http://localhost:8081
-   ```
-
-<!-- USAGE -->
-## Usage
-
-### Compilar y generar código
-
-Genera los DTOs e interfaces desde OpenAPI:
-```sh
-./gradlew openApiGenerate
+```
+foodcourt ──────> foodCourt-users (validar roles y usuarios)
+          └─────> trazability-audit (registrar auditorías)
+          └─────> message-sms (enviar notificaciones)
+                           └─────> Twilio API (SMS)
 ```
 
-Compila todo el proyecto:
-```sh
+---
+
+## 📊 Historias de Usuario Implementadas
+
+El proyecto cubre **18 Historias de Usuario** completas:
+
+### 🔐 Autenticación y Usuarios (4 HU)
+
+| ID | Historia | Microservicio | Rol |
+|----|----------|---------------|-----|
+| HU-1 | Crear Propietario | foodCourt-users | Administrador |
+| HU-5 | Autenticación al sistema | foodCourt-users | Todos |
+| HU-6 | Crear cuenta empleado | foodCourt-users | Propietario |
+| HU-8 | Crear cuenta Cliente | foodCourt-users | - |
+
+### 🍽️ Restaurantes y Platos (5 HU)
+
+| ID | Historia | Microservicio | Rol |
+|----|----------|---------------|-----|
+| HU-2 | Crear Restaurante | foodcourt | Administrador |
+| HU-3 | Crear Plato | foodcourt | Propietario |
+| HU-4 | Modificar Plato | foodcourt | Propietario |
+| HU-7 | Habilitar/Deshabilitar Plato | foodcourt | Propietario |
+| HU-9 | Listar los restaurantes | foodcourt | Cliente |
+| HU-10 | Listar los platos de un restaurante | foodcourt | Cliente |
+
+### 📦 Gestión de Pedidos (7 HU)
+
+| ID | Historia | Microservicio | Rol |
+|----|----------|---------------|-----|
+| HU-11 | Realizar pedido | foodcourt | Cliente |
+| HU-12 | Obtener lista de pedidos | foodcourt | Empleado |
+| HU-13 | Asignarse a un pedido | foodcourt | Empleado |
+| HU-14 | Notificar pedido listo | foodcourt + message-sms | Empleado |
+| HU-15 | Entregar pedido | foodcourt | Empleado |
+| HU-16 | Cancelar pedido | foodcourt | Cliente |
+
+### 📈 Trazabilidad y Métricas (2 HU)
+
+| ID | Historia | Microservicio | Rol |
+|----|----------|---------------|-----|
+| HU-17 | Consultar trazabilidad | trazability-audit | Cliente |
+| HU-18 | Consultar eficiencia | foodcourt | Propietario |
+
+---
+
+## Endpoints Implementados
+
+### Restaurantes
+
+#### `POST /restaurants`
+Crear un nuevo restaurante (solo ADMINISTRADOR).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "name": "Restaurante Ejemplo",
+  "nit": "900123456",
+  "address": "Calle 123 #45-67",
+  "phoneNumber": "+573001234567",
+  "logoUrl": "https://example.com/logo.png",
+  "ownerId": 5
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "Restaurante Ejemplo",
+    "nit": "900123456",
+    "address": "Calle 123 #45-67",
+    "phoneNumber": "+573001234567",
+    "logoUrl": "https://example.com/logo.png",
+    "ownerId": 5
+  }
+}
+```
+
+---
+
+#### `GET /restaurants`
+Listar restaurantes paginado (orden alfabético).
+
+**Query Parameters:**
+- `page`: Número de página (default: 0)
+- `size`: Tamaño de página (default: 10)
+
+**Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "name": "Restaurante Ejemplo",
+      "logoUrl": "https://example.com/logo.png"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Platos
+
+#### `POST /dishes`
+Crear un plato (solo PROPIETARIO del restaurante).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "name": "Hamburguesa Especial",
+  "price": 25000,
+  "description": "Deliciosa hamburguesa con queso y tocino",
+  "imageUrl": "https://example.com/burger.png",
+  "categoryId": 1,
+  "restaurantId": 1
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "data": {
+    "id": 1,
+    "name": "Hamburguesa Especial",
+    "price": 25000,
+    "description": "Deliciosa hamburguesa con queso y tocino",
+    "imageUrl": "https://example.com/burger.png",
+    "category": "COMIDA_RAPIDA",
+    "active": true,
+    "restaurantId": 1
+  }
+}
+```
+
+---
+
+#### `PUT /dishes/{id}`
+Actualizar precio y descripción de un plato (solo PROPIETARIO).
+
+**Request Body:**
+```json
+{
+  "price": 28000,
+  "description": "Nueva descripción actualizada"
+}
+```
+
+---
+
+#### `PATCH /dishes/{id}/status`
+Habilitar/Deshabilitar un plato (solo PROPIETARIO).
+
+**Request Body:**
+```json
+{
+  "active": false
+}
+```
+
+---
+
+#### `GET /dishes`
+Listar platos de un restaurante (con filtros opcionales).
+
+**Query Parameters:**
+- `restaurantId`: ID del restaurante (obligatorio)
+- `category`: Categoría del plato (opcional)
+- `page`: Número de página (default: 0)
+- `size`: Tamaño de página (default: 10)
+
+**Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "name": "Hamburguesa Especial",
+      "price": 25000,
+      "description": "Deliciosa hamburguesa",
+      "imageUrl": "https://example.com/burger.png",
+      "category": "COMIDA_RAPIDA",
+      "active": true
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+### Pedidos
+
+#### `POST /orders`
+Crear un nuevo pedido (solo CLIENTE).
+
+**Headers:**
+```
+Authorization: Bearer <token>
+```
+
+**Request Body:**
+```json
+{
+  "restaurantId": 1,
+  "dishes": [
+    {
+      "dishId": 1,
+      "quantity": 2
+    },
+    {
+      "dishId": 3,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+**Response (201 Created):**
+```json
+{
+  "data": {
+    "id": 1,
+    "restaurantId": 1,
+    "clientId": 10,
+    "status": "PENDIENTE",
+    "createdAt": "2025-12-07T10:30:00",
+    "dishes": [
+      {
+        "dishId": 1,
+        "dishName": "Hamburguesa Especial",
+        "quantity": 2,
+        "unitPrice": 25000
+      }
+    ],
+    "total": 50000
+  }
+}
+```
+
+---
+
+#### `GET /orders`
+Listar pedidos con filtros (EMPLEADO ve solo de su restaurante).
+
+**Query Parameters:**
+- `status`: Estado del pedido (opcional)
+- `page`: Número de página (default: 0)
+- `size`: Tamaño de página (default: 10)
+
+**Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": 1,
+      "restaurantId": 1,
+      "clientId": 10,
+      "employeeId": null,
+      "status": "PENDIENTE",
+      "createdAt": "2025-12-07T10:30:00"
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 1,
+    "totalPages": 1
+  }
+}
+```
+
+---
+
+#### `PATCH /orders/{id}/assign`
+Asignarse a un pedido y cambiar estado a EN_PREPARACION (solo EMPLEADO).
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "EN_PREPARACION",
+    "employeeId": 7
+  }
+}
+```
+
+---
+
+#### `PATCH /orders/{id}/ready`
+Marcar pedido como listo y enviar SMS con PIN (solo EMPLEADO).
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "LISTO",
+    "securityPin": "1234",
+    "smsStatus": "SENT"
+  }
+}
+```
+
+---
+
+#### `PATCH /orders/{id}/deliver`
+Entregar pedido validando PIN (solo EMPLEADO).
+
+**Request Body:**
+```json
+{
+  "securityPin": "1234"
+}
+```
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "ENTREGADO",
+    "deliveredAt": "2025-12-07T11:00:00"
+  }
+}
+```
+
+---
+
+#### `PATCH /orders/{id}/cancel`
+Cancelar pedido (solo CLIENTE, solo si está PENDIENTE).
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "id": 1,
+    "status": "CANCELADO"
+  }
+}
+```
+
+---
+
+### Métricas
+
+#### `GET /metrics/restaurant/{restaurantId}/efficiency`
+Consultar eficiencia de pedidos por restaurante (solo PROPIETARIO).
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "restaurantId": 1,
+    "totalOrders": 50,
+    "averageTimeMinutes": 25,
+    "employeeRanking": [
+      {
+        "employeeId": 7,
+        "employeeName": "Juan Pérez",
+        "ordersCompleted": 30,
+        "averageTimeMinutes": 20
+      },
+      {
+        "employeeId": 8,
+        "employeeName": "María García",
+        "ordersCompleted": 20,
+        "averageTimeMinutes": 30
+      }
+    ]
+  }
+}
+```
+
+---
+
+## Cómo Ejecutar Localmente
+
+### 1. Prerequisitos
+
+- ✅ JDK 17
+- ✅ Gradle
+- ✅ PostgreSQL 14+
+- ✅ **Microservicio foodCourt-users ejecutándose en puerto 8081**
+- ✅ **Microservicio trazability-audit ejecutándose en puerto 8083**
+- ✅ **Microservicio message-sms ejecutándose en puerto 8084**
+
+### 2. Instalación
+
+1. **Clonar el repositorio**
+   ```bash
+   git clone <repository-url>
+   cd foodcourt
+   ```
+
+2. **Crear base de datos en PostgreSQL**
+   ```sql
+   CREATE DATABASE foodcourt;
+   ```
+
+3. **Configurar conexión a base de datos**
+   
+   Editar `src/main/resources/application-dev.yml`:
+   ```yaml
+   spring:
+     datasource:
+       url: jdbc:postgresql://localhost:5432/foodcourt
+       username: postgres
+       password: tu_contraseña
+   ```
+
+4. **Configurar URLs de microservicios**
+   
+   Editar `src/main/resources/application-dev.yml`:
+   ```yaml
+   users:
+     service:
+       url: http://localhost:8081
+   audit:
+      service:
+       url: http://localhost:8083
+   ```
+
+### 3. Compilar el Proyecto
+
+```bash
+# Generar DTOs desde OpenAPI spec
+./gradlew openApiGenerate
+
+# Compilar todo el proyecto
 ./gradlew clean build
 ```
 
-### Ejecutar la aplicación
+### 4. Ejecutar la Aplicación
 
-⚠️ **Importante**: Primero debe estar ejecutándose el microservicio de Users en el puerto 8081
+⚠️ **IMPORTANTE**: Antes de ejecutar este microservicio, asegúrate de que los siguientes estén corriendo:
+1. `foodCourt-users` (puerto 8081)
+2. `trazability-audit` (puerto 8083)
+3. `message-sms` (puerto 8084)
 
-Desde terminal:
-```sh
+**Opción 1: Desde terminal**
+```bash
 ./gradlew bootRun
 ```
 
-O desde IntelliJ: Right-click PowerUpApplication → Run
+**Opción 2: Desde IntelliJ IDEA**
+- Right-click `PowerUpApplication.java` → Run
 
-La aplicación estará disponible en:
-- API: [http://localhost:8082](http://localhost:8082)
-- Swagger UI: [http://localhost:8082/swagger-ui.html](http://localhost:8082/swagger-ui.html)
-- OpenAPI spec: [http://localhost:8082/api-docs](http://localhost:8082/api-docs)
+---
 
-### Endpoints Principales
+## Cómo Correr las Pruebas
 
-#### Restaurantes
-- `POST /restaurants` - Crear restaurante (requiere rol ADMINISTRADOR)
-- `GET /restaurants` - Listar restaurantes
-- `GET /restaurants/{id}` - Obtener restaurante por ID
+### Ejecutar todas las pruebas con cobertura
 
-#### Platos
-- `POST /dishes` - Crear plato (requiere ser PROPIETARIO del restaurante)
-- `PUT /dishes/{id}` - Actualizar plato (requiere ser PROPIETARIO del restaurante)
-- `GET /dishes` - Listar platos
-
-### Reglas de Negocio
-
-#### Creación de Restaurantes
-- Solo usuarios con rol **ADMINISTRADOR** pueden crear restaurantes
-- El `ownerId` proporcionado debe existir y tener rol PROPIETARIO
-- El NIT del restaurante debe ser único
-- El nombre no puede contener solo números
-
-#### Gestión de Platos
-- Solo usuarios con rol **PROPIETARIO** pueden crear/modificar platos
-- El propietario debe ser dueño del restaurante al que pertenece el plato
-- Si un propietario intenta crear/modificar un plato de otro restaurante → HTTP 403 Forbidden
-
-#### Validaciones
-- Nombre del restaurante requerido y no puede ser solo números
-- NIT único
-- Precio del plato debe ser mayor a 0
-- El restaurante debe existir antes de crear platos
-
-### Desarrollo API-First
-
-1. **Edita** el schema en `src/main/resources/static/open-api.yaml`
-2. **Genera** los DTOs: `./gradlew openApiGenerate`
-3. **Implementa** las interfaces generadas en los controladores
-4. **Mapea** entre DTOs y modelos de dominio con MapStruct
-
-Flujo de una petición:
-```
-Request → Controller (valida @RequireRole) → Handler → UseCase 
-  ↓
-Valida permisos específicos → Persiste → Response
-```
-
-<!-- ROADMAP -->
-## Tests
-
-Run tests with coverage:
-```sh
+```bash
 ./gradlew test jacocoTestReport
 ```
 
-O desde IntelliJ: Right-click test folder → Run tests with coverage
+### Ver reportes
 
-### Seguridad
+```bash
+# Reporte de tests
+start build/reports/tests/test/index.html
+
+# Reporte de cobertura
+start build/reports/jacoco/test/html/index.html
+```
+
+### Ejecutar tests específicos
+
+```bash
+# RestaurantUseCaseTest (HU-2, HU-9)
+./gradlew test --tests "RestaurantUseCaseTest"
+
+# DishUseCaseTest (HU-3, HU-4, HU-7, HU-10)
+./gradlew test --tests "DishUseCaseTest"
+
+# OrderUseCaseTest (HU-11, HU-12, HU-13, HU-14, HU-15, HU-16)
+./gradlew test --tests "OrderUseCaseTest"
+
+# MetricsUseCaseTest (HU-18)
+./gradlew test --tests "MetricsUseCaseTest"
+
+# UserValidationHttpAdapterTest (WireMock)
+./gradlew test --tests "UserValidationHttpAdapterTest"
+```
+
+### Cobertura de Historias de Usuario
+
+Este microservicio cubre **13 Historias de Usuario** con más de **90 pruebas unitarias**:
+
+| Historia | Clase de Test | Pruebas |
+|----------|---------------|---------|
+| HU-2: Crear Restaurante | `RestaurantUseCaseTest` | ✅ Validación NIT único<br>✅ Validación propietario existe<br>✅ Validación nombre |
+| HU-3: Crear Plato | `DishUseCaseTest` | ✅ Validación propietario<br>✅ Precio > 0<br>✅ Plato activo por defecto |
+| HU-4: Modificar Plato | `DishUseCaseTest` | ✅ Solo precio y descripción<br>✅ Validación ownership |
+| HU-7: Habilitar/Deshabilitar | `DishUseCaseTest` | ✅ Solo propietario<br>✅ Toggle status |
+| HU-9: Listar Restaurantes | `RestaurantUseCaseTest` | ✅ Orden alfabético<br>✅ Paginación |
+| HU-10: Listar Platos | `DishUseCaseTest` | ✅ Filtro por categoría<br>✅ Paginación |
+| HU-11: Realizar Pedido | `OrderUseCaseTest` | ✅ Estado inicial PENDIENTE<br>✅ Sin pedidos activos |
+| HU-12: Listar Pedidos | `OrderUseCaseTest` | ✅ Filtro por estado<br>✅ Solo restaurante empleado |
+| HU-13: Asignar Pedido | `OrderUseCaseTest` | ✅ Cambio a EN_PREPARACION<br>✅ Asignación empleado |
+| HU-14: Pedido Listo | `OrderUseCaseTest` | ✅ Generación PIN<br>✅ Envío SMS |
+| HU-15: Entregar Pedido | `OrderUseCaseTest` | ✅ Validación PIN<br>✅ Solo desde LISTO |
+| HU-16: Cancelar Pedido | `OrderUseCaseTest` | ✅ Solo PENDIENTE<br>✅ Mensaje error |
+| HU-18: Eficiencia | `MetricsUseCaseTest` | ✅ Tiempo promedio<br>✅ Ranking empleados |
+
+---
+
+## Notas Adicionales
+
+### Seguridad y Autenticación
 
 #### JWT (JSON Web Tokens)
+
 El microservicio valida tokens JWT generados por el microservicio de Users:
 
 **Extracción del usuario autenticado:**
@@ -190,62 +610,32 @@ El microservicio valida tokens JWT generados por el microservicio de Users:
 **Flujo de autorización:**
 1. Cliente incluye token en header: `Authorization: Bearer <token>`
 2. Sistema extrae `userId` y `role` del token
-3. Controller valida rol básico con `@RequireRole`
+3. Controller valida rol básico con anotaciones de seguridad
 4. UseCase valida permisos específicos (ej: propiedad del restaurante)
 
-#### Roles y Permisos
+### Integración con otros Microservicios
 
-| Rol | Puede hacer | Validación |
-|-----|------------|-----------|
-| ADMINISTRADOR | Crear restaurantes | `@RequireRole` en controller |
-| PROPIETARIO | Crear/modificar platos | `@RequireRole` + validación de propiedad en UseCase |
-| EMPLEADO | - | - |
-| CLIENTE | - | - |
+#### foodCourt-users (Puerto 8081)
+- **Validación de roles**: Verifica que usuarios tengan roles específicos
+- **Consulta de usuarios**: Obtiene información de empleados y clientes
+- **Tecnología**: RestTemplate
 
-### Validaciones de Propiedad
+#### trazability-audit (Puerto 8083)
+- **Registro de auditoría**: Cada cambio de estado de pedido se registra
+- **Consulta de trazabilidad**: Los clientes pueden ver el historial de sus pedidos
+- **Tecnología**: Feign Client
 
-**Crear/Modificar Plato:**
-1. Se verifica que el usuario tenga rol PROPIETARIO (controller)
-2. Se obtiene el restaurante asociado al plato
-3. Se compara `restaurant.ownerId` con `currentUserId`
-4. Si no coinciden → `UnauthorizedDishOperationException` (HTTP 403)
+#### message-sms (Puerto 8084)
+- **Notificaciones SMS**: Envía PIN de seguridad cuando pedido está listo
+- **Tecnología**: RestTemplate → Twilio API
 
-**Ejemplo:**
-- Usuario ID 5 (PROPIETARIO) intenta crear plato en restaurante con ownerId=7
-- Resultado: ❌ HTTP 403 "Solo el propietario del restaurante puede crear o modificar platos"
+---
 
-### Arquitectura Hexagonal
+## Autor
 
-**Capas:**
-- **Domain**: Lógica de negocio pura
-- **Application**: Orquestación y mapeo
-- **Infrastructure**: Adaptadores externos
+**Brayan Barco**
 
-**Puertos:**
-- **API (Entrada)**: `IRestaurantServicePort`, `IDishServicePort`
-- **SPI (Salida)**: `IRestaurantPersistencePort`, `IDishPersistencePort`, `ISecurityContextPort`, `IUserValidationPort`
+## Licencia
 
-**Comunicación entre microservicios:**
-- Feign Client para consumir API de Users
-- Validación de existencia de usuarios y roles
-- Manejo de errores de comunicación
-
-### Documentación Adicional
-
-- [VALIDACIONES_SEGURIDAD_IMPLEMENTADAS.md](VALIDACIONES_SEGURIDAD_IMPLEMENTADAS.md) - Detalles de validaciones implementadas
-
-### Troubleshooting
-
-**Error: "Cannot connect to Users API"**
-- Verifica que el microservicio de Users esté ejecutándose en puerto 8081
-- Revisa la variable `USERS_API_URL` en el archivo `.env`
-
-**Error: "Unauthorized Dish Operation"**
-- Verifica que el token JWT sea del propietario correcto del restaurante
-- Confirma que el `ownerId` del restaurante coincida con tu `userId`
-
-**Error: "Restaurant Not Found"**
-- Verifica que el `restaurantId` exista en la base de datos
-- Confirma que estés apuntando a la base de datos correcta
-
+Este proyecto es parte de la prueba técnica de Pragma.
 
