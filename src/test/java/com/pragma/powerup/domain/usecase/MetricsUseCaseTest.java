@@ -18,13 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
-/**
- * Pruebas unitarias para MetricsUseCase
- * Cubre la siguiente Historia de Usuario:
- * - HU18: Consultar la eficiencia de los pedidos
- */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("MetricsUseCase - Métricas y Eficiencia")
+@DisplayName("MetricsUseCase - M\u00e9tricas y Eficiencia")
 class MetricsUseCaseTest {
 
     @Mock
@@ -45,31 +40,28 @@ class MetricsUseCaseTest {
     }
 
     @Nested
-    @DisplayName("HU18: Consultar métricas de duración de pedidos")
+    @DisplayName("HU18: Consultar m\u00e9tricas de duraci\u00f3n de pedidos")
     class GetOrdersDurationMetricsTests {
 
         @Test
-        @DisplayName("Happy Path: Debe obtener métricas de duración de pedidos")
+        @DisplayName("Happy Path: Debe obtener m\u00e9tricas de duraci\u00f3n de pedidos")
         void shouldGetOrdersDurationMetrics() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
             when(orderAuditPort.getOrdersDurationMetrics(
-                eq(restaurantId),
-                eq(startDate),
-                eq(endDate),
-                eq(0),
-                eq(20),
-                eq("durationMinutes"),
-                eq("DESC")
+                restaurantId,
+                startDate,
+                endDate,
+                0,
+                20,
+                "durationMinutes",
+                "DESC"
             )).thenReturn(expectedResponse);
 
-            // Act
             OrdersDurationMetricsResponseDto result = metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, null, null, null, null
             );
 
-            // Assert
             assertNotNull(result);
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 0, 20, "durationMinutes", "DESC"
@@ -77,63 +69,54 @@ class MetricsUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe usar valores predeterminados de paginación")
+        @DisplayName("Validaci\u00f3n: Debe usar valores predeterminados de paginaci\u00f3n")
         void shouldUseDefaultPaginationValues() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
             when(orderAuditPort.getOrdersDurationMetrics(
                 anyLong(), any(), any(), eq(0), eq(20), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, null, null, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 0, 20, "durationMinutes", "DESC"
             );
         }
 
         @Test
-        @DisplayName("Error: Debe permitir paginación personalizada")
+        @DisplayName("Error: Debe permitir paginaci\u00f3n personalizada")
         void shouldAllowCustomPagination() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
             when(orderAuditPort.getOrdersDurationMetrics(
                 eq(restaurantId), any(), any(), eq(2), eq(50), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 2, 50, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 2, 50, "durationMinutes", "DESC"
             );
         }
 
         @Test
-        @DisplayName("Validación: Debe permitir ordenamiento personalizado")
+        @DisplayName("Validaci\u00f3n: Debe permitir ordenamiento personalizado")
         void shouldAllowCustomSorting() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
             when(orderAuditPort.getOrdersDurationMetrics(
                 anyLong(), any(), any(), anyInt(), anyInt(), eq("orderId"), eq("ASC")
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, null, null, "orderId", "ASC"
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 0, 20, "orderId", "ASC"
             );
@@ -141,31 +124,28 @@ class MetricsUseCaseTest {
     }
 
     @Nested
-    @DisplayName("HU18: Consultar métricas de eficiencia de empleados")
+    @DisplayName("HU18: Consultar m\u00e9tricas de eficiencia de empleados")
     class GetEmployeeEfficiencyMetricsTests {
 
         @Test
-        @DisplayName("Happy Path: Debe obtener métricas de eficiencia de empleados")
+        @DisplayName("Happy Path: Debe obtener m\u00e9tricas de eficiencia de empleados")
         void shouldGetEmployeeEfficiencyMetrics() {
-            // Arrange
             EmployeeEfficiencyMetricsResponseDto expectedResponse = new EmployeeEfficiencyMetricsResponseDto();
 
             when(orderAuditPort.getEmployeeEfficiencyMetrics(
-                eq(restaurantId),
-                eq(startDate),
-                eq(endDate),
-                eq(0),
-                eq(20),
-                eq("averageDurationMinutes"),
-                eq("ASC")
+                restaurantId,
+                startDate,
+                endDate,
+                0,
+                20,
+                "averageDurationMinutes",
+                "ASC"
             )).thenReturn(expectedResponse);
 
-            // Act
             EmployeeEfficiencyMetricsResponseDto result = metricsUseCase.getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, null, null, null, null
             );
 
-            // Assert
             assertNotNull(result);
             verify(orderAuditPort).getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, 0, 20, "averageDurationMinutes", "ASC"
@@ -173,21 +153,18 @@ class MetricsUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe usar valores predeterminados correctos")
+        @DisplayName("Validaci\u00f3n: Debe usar valores predeterminados correctos")
         void shouldUseCorrectDefaultValues() {
-            // Arrange
             EmployeeEfficiencyMetricsResponseDto expectedResponse = new EmployeeEfficiencyMetricsResponseDto();
 
             when(orderAuditPort.getEmployeeEfficiencyMetrics(
                 anyLong(), any(), any(), eq(0), eq(20), eq("averageDurationMinutes"), eq("ASC")
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, null, null, null, null
             );
 
-            // Assert - ASC para mostrar los más eficientes primero
             verify(orderAuditPort).getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, 0, 20, "averageDurationMinutes", "ASC"
             );
@@ -196,40 +173,34 @@ class MetricsUseCaseTest {
         @Test
         @DisplayName("Error: Debe permitir ordenar de forma descendente")
         void shouldAllowDescendingOrder() {
-            // Arrange
             EmployeeEfficiencyMetricsResponseDto expectedResponse = new EmployeeEfficiencyMetricsResponseDto();
 
             when(orderAuditPort.getEmployeeEfficiencyMetrics(
                 anyLong(), any(), any(), anyInt(), anyInt(), anyString(), eq("DESC")
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, null, null, null, "DESC"
             );
 
-            // Assert
             verify(orderAuditPort).getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, 0, 20, "averageDurationMinutes", "DESC"
             );
         }
 
         @Test
-        @DisplayName("Validación: Debe permitir ordenar por totalOrders")
+        @DisplayName("Validaci\u00f3n: Debe permitir ordenar por totalOrders")
         void shouldAllowSortByTotalOrders() {
-            // Arrange
             EmployeeEfficiencyMetricsResponseDto expectedResponse = new EmployeeEfficiencyMetricsResponseDto();
 
             when(orderAuditPort.getEmployeeEfficiencyMetrics(
                 anyLong(), any(), any(), anyInt(), anyInt(), eq("totalOrders"), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, null, null, "totalOrders", "DESC"
             );
 
-            // Assert
             verify(orderAuditPort).getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, 0, 20, "totalOrders", "DESC"
             );
@@ -241,42 +212,36 @@ class MetricsUseCaseTest {
     class EdgeCasesTests {
 
         @Test
-        @DisplayName("Edge Case: Debe manejar página 0 correctamente")
+        @DisplayName("Edge Case: Debe manejar p\u00e1gina 0 correctamente")
         void shouldHandlePageZeroCorrectly() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
             when(orderAuditPort.getOrdersDurationMetrics(
                 anyLong(), any(), any(), eq(0), anyInt(), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 0, 10, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, startDate, endDate, 0, 10, "durationMinutes", "DESC"
             );
         }
 
         @Test
-        @DisplayName("Edge Case: Debe manejar tamaños de página grandes")
+        @DisplayName("Edge Case: Debe manejar tama\u00f1os de p\u00e1gina grandes")
         void shouldHandleLargePageSizes() {
-            // Arrange
             EmployeeEfficiencyMetricsResponseDto expectedResponse = new EmployeeEfficiencyMetricsResponseDto();
 
             when(orderAuditPort.getEmployeeEfficiencyMetrics(
                 anyLong(), any(), any(), anyInt(), eq(100), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, null, 100, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getEmployeeEfficiencyMetrics(
                 restaurantId, startDate, endDate, 0, 100, "averageDurationMinutes", "ASC"
             );
@@ -285,7 +250,6 @@ class MetricsUseCaseTest {
         @Test
         @DisplayName("Edge Case: Debe manejar rangos de fechas amplios")
         void shouldHandleWideDateRanges() {
-            // Arrange
             OffsetDateTime veryOldDate = OffsetDateTime.now().minusYears(1);
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
 
@@ -293,21 +257,18 @@ class MetricsUseCaseTest {
                 anyLong(), eq(veryOldDate), any(), anyInt(), anyInt(), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 restaurantId, veryOldDate, endDate, null, null, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 restaurantId, veryOldDate, endDate, 0, 20, "durationMinutes", "DESC"
             );
         }
 
         @Test
-        @DisplayName("Edge Case: Debe manejar múltiples llamadas consecutivas")
+        @DisplayName("Edge Case: Debe manejar m\u00faltiples llamadas consecutivas")
         void shouldHandleMultipleConsecutiveCalls() {
-            // Arrange
             OrdersDurationMetricsResponseDto durationResponse = new OrdersDurationMetricsResponseDto();
             EmployeeEfficiencyMetricsResponseDto efficiencyResponse = new EmployeeEfficiencyMetricsResponseDto();
 
@@ -319,19 +280,16 @@ class MetricsUseCaseTest {
                 anyLong(), any(), any(), anyInt(), anyInt(), anyString(), anyString()
             )).thenReturn(efficiencyResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(restaurantId, startDate, endDate, null, null, null, null);
             metricsUseCase.getEmployeeEfficiencyMetrics(restaurantId, startDate, endDate, null, null, null, null);
 
-            // Assert
             verify(orderAuditPort, times(1)).getOrdersDurationMetrics(anyLong(), any(), any(), anyInt(), anyInt(), anyString(), anyString());
             verify(orderAuditPort, times(1)).getEmployeeEfficiencyMetrics(anyLong(), any(), any(), anyInt(), anyInt(), anyString(), anyString());
         }
 
         @Test
-        @DisplayName("Validación: Debe delegar correctamente al puerto de auditoría")
+        @DisplayName("Validaci\u00f3n: Debe delegar correctamente al puerto de auditor\u00eda")
         void shouldDelegateCorrectlyToAuditPort() {
-            // Arrange
             OrdersDurationMetricsResponseDto expectedResponse = new OrdersDurationMetricsResponseDto();
             Long specificRestaurantId = 42L;
 
@@ -339,16 +297,13 @@ class MetricsUseCaseTest {
                 eq(specificRestaurantId), any(), any(), anyInt(), anyInt(), anyString(), anyString()
             )).thenReturn(expectedResponse);
 
-            // Act
             metricsUseCase.getOrdersDurationMetrics(
                 specificRestaurantId, startDate, endDate, null, null, null, null
             );
 
-            // Assert
             verify(orderAuditPort).getOrdersDurationMetrics(
                 eq(specificRestaurantId), any(), any(), anyInt(), anyInt(), anyString(), anyString()
             );
         }
     }
 }
-

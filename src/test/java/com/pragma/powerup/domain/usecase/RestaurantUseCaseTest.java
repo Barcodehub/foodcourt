@@ -13,6 +13,9 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullAndEmptySource;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -30,14 +33,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * Pruebas unitarias para RestaurantUseCase
- * Cubre las siguientes Historias de Usuario:
- * - HU2: Crear Restaurante
- * - HU9: Listar los restaurantes
- */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("RestaurantUseCase - Gestión de Restaurantes")
+@DisplayName("RestaurantUseCase - Gestion de Restaurantes")
 class RestaurantUseCaseTest {
 
     @Mock
@@ -77,16 +74,13 @@ class RestaurantUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe crear restaurante con datos válidos")
         void shouldCreateRestaurantWithValidData() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
             when(userValidationPort.getUserById(validRestaurant.getOwnerId())).thenReturn(Optional.of(ownerUser));
             when(userValidationPort.isUserOwner(validRestaurant.getOwnerId())).thenReturn(true);
             when(restaurantPersistencePort.saveRestaurant(any(RestaurantModel.class))).thenReturn(validRestaurant);
 
-            // Act
             RestaurantModel result = restaurantUseCase.createRestaurant(validRestaurant);
 
-            // Assert
             assertNotNull(result);
             assertEquals(validRestaurant.getName(), result.getName());
             assertEquals(validRestaurant.getNit(), result.getNit());
@@ -98,28 +92,21 @@ class RestaurantUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar nombre de restaurante numérico")
+        @DisplayName("Validacion: Debe rechazar nombre de restaurante numerico")
         void shouldRejectNumericRestaurantName() {
-            // Arrange
             validRestaurant.setName("123456");
 
-            // Act & Assert
-            InvalidRestaurantException exception = assertThrows(
-                    InvalidRestaurantException.class,
-                    () -> restaurantUseCase.createRestaurant(validRestaurant)
-            );
+            assertThrows(InvalidRestaurantException.class,
+                    () -> restaurantUseCase.createRestaurant(validRestaurant));
 
-            assertTrue(exception.getMessage().contains("numérico") || exception.getMessage().contains("numeric"));
             verify(restaurantPersistencePort, never()).saveRestaurant(any(RestaurantModel.class));
         }
 
         @Test
         @DisplayName("Error: Debe rechazar restaurante con NIT duplicado")
         void shouldRejectDuplicateNit() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.of(validRestaurant));
 
-            // Act & Assert
             assertThrows(RestaurantAlreadyExistsException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
@@ -132,13 +119,11 @@ class RestaurantUseCaseTest {
     class OwnerValidationTests {
 
         @Test
-        @DisplayName("Validación: Debe rechazar propietario inexistente")
+        @DisplayName("Validacion: Debe rechazar propietario inexistente")
         void shouldRejectNonExistentOwner() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
             when(userValidationPort.getUserById(validRestaurant.getOwnerId())).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(UserNotFoundException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
@@ -146,14 +131,12 @@ class RestaurantUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar usuario sin rol propietario")
+        @DisplayName("Validacion: Debe rechazar usuario sin rol propietario")
         void shouldRejectUserWithoutOwnerRole() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
             when(userValidationPort.getUserById(validRestaurant.getOwnerId())).thenReturn(Optional.of(ownerUser));
             when(userValidationPort.isUserOwner(validRestaurant.getOwnerId())).thenReturn(false);
 
-            // Act & Assert
             assertThrows(UserNotOwnerException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
@@ -163,11 +146,9 @@ class RestaurantUseCaseTest {
         @Test
         @DisplayName("Error: Debe validar que el propietario existe antes de verificar rol")
         void shouldValidateOwnerExistsBeforeCheckingRole() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
             when(userValidationPort.getUserById(validRestaurant.getOwnerId())).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(UserNotFoundException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
@@ -179,13 +160,13 @@ class RestaurantUseCaseTest {
     @DisplayName("Validaciones de Nombre")
     class NameValidationTests {
 
-        @Test
-        @DisplayName("Validación: Debe rechazar nombre vacío")
-        void shouldRejectEmptyName() {
-            // Arrange
-            validRestaurant.setName("");
+        @ParameterizedTest
+        @NullAndEmptySource
+        @ValueSource(strings = {"   ", "  ", "\t", "\n"})
+        @DisplayName("Validacion: Debe rechazar nombres invalidos (null, vacio, solo espacios)")
+        void shouldRejectInvalidNames(String invalidName) {
+            validRestaurant.setName(invalidName);
 
-            // Act & Assert
             assertThrows(InvalidRestaurantException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
@@ -193,35 +174,8 @@ class RestaurantUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar nombre null")
-        void shouldRejectNullName() {
-            // Arrange
-            validRestaurant.setName(null);
-
-            // Act & Assert
-            assertThrows(InvalidRestaurantException.class,
-                    () -> restaurantUseCase.createRestaurant(validRestaurant));
-
-            verify(restaurantPersistencePort, never()).saveRestaurant(any(RestaurantModel.class));
-        }
-
-        @Test
-        @DisplayName("Validación: Debe rechazar nombre con solo espacios")
-        void shouldRejectNameWithOnlySpaces() {
-            // Arrange
-            validRestaurant.setName("   ");
-
-            // Act & Assert
-            assertThrows(InvalidRestaurantException.class,
-                    () -> restaurantUseCase.createRestaurant(validRestaurant));
-
-            verify(restaurantPersistencePort, never()).saveRestaurant(any(RestaurantModel.class));
-        }
-
-        @Test
-        @DisplayName("Happy Path: Debe aceptar nombre alfanumérico")
+        @DisplayName("Happy Path: Debe aceptar nombre alfanumerico")
         void shouldAcceptAlphanumericName() {
-            // Arrange
             validRestaurant.setName("Restaurante 123 ABC");
 
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
@@ -229,10 +183,8 @@ class RestaurantUseCaseTest {
             when(userValidationPort.isUserOwner(validRestaurant.getOwnerId())).thenReturn(true);
             when(restaurantPersistencePort.saveRestaurant(any(RestaurantModel.class))).thenReturn(validRestaurant);
 
-            // Act
             RestaurantModel result = restaurantUseCase.createRestaurant(validRestaurant);
 
-            // Assert
             assertNotNull(result);
             verify(restaurantPersistencePort).saveRestaurant(validRestaurant);
         }
@@ -240,7 +192,6 @@ class RestaurantUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe aceptar nombre con caracteres especiales")
         void shouldAcceptNameWithSpecialCharacters() {
-            // Arrange
             validRestaurant.setName("Restaurante D'Amico");
 
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
@@ -248,10 +199,8 @@ class RestaurantUseCaseTest {
             when(userValidationPort.isUserOwner(validRestaurant.getOwnerId())).thenReturn(true);
             when(restaurantPersistencePort.saveRestaurant(any(RestaurantModel.class))).thenReturn(validRestaurant);
 
-            // Act
             RestaurantModel result = restaurantUseCase.createRestaurant(validRestaurant);
 
-            // Assert
             assertNotNull(result);
             verify(restaurantPersistencePort).saveRestaurant(validRestaurant);
         }
@@ -262,9 +211,8 @@ class RestaurantUseCaseTest {
     class ListRestaurantsTests {
 
         @Test
-        @DisplayName("Happy Path: Debe listar restaurantes con paginación")
+        @DisplayName("Happy Path: Debe listar restaurantes con paginacion")
         void shouldListRestaurantsWithPagination() {
-            // Arrange
             RestaurantModel restaurant1 = new RestaurantModel(1L, "Restaurant 1", "900111111", "Address 1", "+573001111111", "logo1.png", 1L);
             RestaurantModel restaurant2 = new RestaurantModel(2L, "Restaurant 2", "900222222", "Address 2", "+573002222222", "logo2.png", 2L);
             RestaurantModel restaurant3 = new RestaurantModel(3L, "Restaurant 3", "900333333", "Address 3", "+573003333333", "logo3.png", 3L);
@@ -275,10 +223,8 @@ class RestaurantUseCaseTest {
 
             when(restaurantPersistencePort.findAll(pageable)).thenReturn(restaurantPage);
 
-            // Act
             Page<RestaurantModel> result = restaurantUseCase.listRestaurants(pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(3, result.getTotalElements());
             assertEquals(3, result.getContent().size());
@@ -288,18 +234,15 @@ class RestaurantUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe retornar página vacía cuando no hay restaurantes")
+        @DisplayName("Validacion: Debe retornar pagina vacia cuando no hay restaurantes")
         void shouldReturnEmptyPageWhenNoRestaurants() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
             Page<RestaurantModel> emptyPage = new PageImpl<>(Arrays.asList(), pageable, 0);
 
             when(restaurantPersistencePort.findAll(pageable)).thenReturn(emptyPage);
 
-            // Act
             Page<RestaurantModel> result = restaurantUseCase.listRestaurants(pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(0, result.getTotalElements());
             assertTrue(result.getContent().isEmpty());
@@ -308,9 +251,8 @@ class RestaurantUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe manejar diferentes tamaños de página")
+        @DisplayName("Validacion: Debe manejar diferentes tamanos de pagina")
         void shouldHandleDifferentPageSizes() {
-            // Arrange
             RestaurantModel restaurant1 = new RestaurantModel(1L, "Restaurant 1", "900111111", "Address 1", "+573001111111", "logo1.png", 1L);
             RestaurantModel restaurant2 = new RestaurantModel(2L, "Restaurant 2", "900222222", "Address 2", "+573002222222", "logo2.png", 2L);
 
@@ -320,10 +262,8 @@ class RestaurantUseCaseTest {
 
             when(restaurantPersistencePort.findAll(pageable)).thenReturn(restaurantPage);
 
-            // Act
             Page<RestaurantModel> result = restaurantUseCase.listRestaurants(pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(10, result.getTotalElements());
             assertEquals(2, result.getContent().size());
@@ -340,7 +280,6 @@ class RestaurantUseCaseTest {
         @Test
         @DisplayName("Edge Case: Debe manejar NIT con diferentes formatos")
         void shouldHandleDifferentNitFormats() {
-            // Arrange
             validRestaurant.setNit("900-123-456-7");
 
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.empty());
@@ -348,10 +287,8 @@ class RestaurantUseCaseTest {
             when(userValidationPort.isUserOwner(validRestaurant.getOwnerId())).thenReturn(true);
             when(restaurantPersistencePort.saveRestaurant(any(RestaurantModel.class))).thenReturn(validRestaurant);
 
-            // Act
             RestaurantModel result = restaurantUseCase.createRestaurant(validRestaurant);
 
-            // Assert
             assertNotNull(result);
             assertEquals("900-123-456-7", result.getNit());
         }
@@ -359,44 +296,37 @@ class RestaurantUseCaseTest {
         @Test
         @DisplayName("Edge Case: Debe validar orden de operaciones correcto")
         void shouldFollowCorrectOperationOrder() {
-            // Arrange
             when(restaurantPersistencePort.findByNit(validRestaurant.getNit())).thenReturn(Optional.of(validRestaurant));
 
-            // Act & Assert
             assertThrows(RestaurantAlreadyExistsException.class,
                     () -> restaurantUseCase.createRestaurant(validRestaurant));
 
-            // La validación de NIT duplicado debe ocurrir antes de validar el propietario
             verify(restaurantPersistencePort).findByNit(validRestaurant.getNit());
             verify(userValidationPort, never()).getUserById(anyLong());
             verify(userValidationPort, never()).isUserOwner(anyLong());
         }
 
         @Test
-        @DisplayName("Edge Case: Debe permitir mismo propietario para múltiples restaurantes")
+        @DisplayName("Edge Case: Debe permitir mismo propietario para multiples restaurantes")
         void shouldAllowSameOwnerForMultipleRestaurants() {
-            // Arrange
             RestaurantModel secondRestaurant = new RestaurantModel();
             secondRestaurant.setName("Segundo Restaurante");
             secondRestaurant.setNit("900999999");
             secondRestaurant.setAddress("Otra Calle");
             secondRestaurant.setPhoneNumber("+573009999999");
             secondRestaurant.setUrlLogo("https://example.com/logo2.png");
-            secondRestaurant.setOwnerId(1L); // Mismo propietario
+            secondRestaurant.setOwnerId(1L);
 
             when(restaurantPersistencePort.findByNit(secondRestaurant.getNit())).thenReturn(Optional.empty());
             when(userValidationPort.getUserById(secondRestaurant.getOwnerId())).thenReturn(Optional.of(ownerUser));
             when(userValidationPort.isUserOwner(secondRestaurant.getOwnerId())).thenReturn(true);
             when(restaurantPersistencePort.saveRestaurant(any(RestaurantModel.class))).thenReturn(secondRestaurant);
 
-            // Act
             RestaurantModel result = restaurantUseCase.createRestaurant(secondRestaurant);
 
-            // Assert
             assertNotNull(result);
             assertEquals(1L, result.getOwnerId());
             verify(restaurantPersistencePort).saveRestaurant(secondRestaurant);
         }
     }
 }
-

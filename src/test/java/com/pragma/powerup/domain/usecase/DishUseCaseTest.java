@@ -32,16 +32,8 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * Pruebas unitarias para DishUseCase
- * Cubre las siguientes Historias de Usuario:
- * - HU3: Crear Plato
- * - HU4: Modificar Plato
- * - HU7: Habilitar/Deshabilitar Plato
- * - HU10: Listar los platos de un restaurante
- */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("DishUseCase - Gestión de Platos")
+@DisplayName("DishUseCase - Gestion de Platos")
 class DishUseCaseTest {
 
     @Mock
@@ -58,25 +50,25 @@ class DishUseCaseTest {
 
     private DishModel validDish;
     private RestaurantModel restaurant;
-    private final Long OWNER_ID = 1L;
-    private final Long RESTAURANT_ID = 1L;
+    private final Long ownerId = 1L;
+    private final Long restaurantId = 1L;
 
     @BeforeEach
     void setUp() {
         restaurant = new RestaurantModel();
-        restaurant.setId(RESTAURANT_ID);
+        restaurant.setId(restaurantId);
         restaurant.setName("Test Restaurant");
-        restaurant.setOwnerId(OWNER_ID);
+        restaurant.setOwnerId(ownerId);
 
         validDish = new DishModel();
         validDish.setId(1L);
         validDish.setName("Bandeja Paisa");
         validDish.setPrice(25000);
-        validDish.setDescription("Plato típico colombiano");
+        validDish.setDescription("Plato tipico colombiano");
         validDish.setUrlImage("https://example.com/bandeja.jpg");
         validDish.setCategory(CategoryEnum.PLATOS_FUERTES);
         validDish.setActive(true);
-        validDish.setRestaurantId(RESTAURANT_ID);
+        validDish.setRestaurantId(restaurantId);
     }
 
     @Nested
@@ -84,70 +76,60 @@ class DishUseCaseTest {
     class CreateDishTests {
 
         @Test
-        @DisplayName("Happy Path: Debe crear plato con datos válidos")
+        @DisplayName("Happy Path: Debe crear plato con datos validos")
         void shouldCreateDishWithValidData() {
-            // Arrange
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             DishModel result = dishUseCase.createDish(validDish);
 
-            // Assert
             assertNotNull(result);
             assertEquals("Bandeja Paisa", result.getName());
             assertEquals(25000, result.getPrice());
             assertTrue(result.getActive());
 
-            verify(restaurantPersistencePort).findById(RESTAURANT_ID);
+            verify(restaurantPersistencePort).findById(restaurantId);
             verify(securityContextPort).getCurrentUserId();
             verify(dishPersistencePort).saveDish(any(DishModel.class));
         }
 
         @Test
-        @DisplayName("Validación: Debe activar el plato automáticamente al crearlo")
+        @DisplayName("Validacion: Debe activar el plato automaticamente al crearlo")
         void shouldAutomaticallyActivateDishOnCreation() {
-            // Arrange
-            validDish.setActive(null); // Sin estado inicial
+            validDish.setActive(null);
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenAnswer(invocation -> {
                 DishModel dish = invocation.getArgument(0);
                 assertTrue(dish.getActive(), "El plato debe estar activo");
                 return dish;
             });
 
-            // Act
             dishUseCase.createDish(validDish);
 
-            // Assert
-            verify(dishPersistencePort).saveDish(argThat(dish -> dish.getActive()));
+            verify(dishPersistencePort).saveDish(argThat(DishModel::getActive));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar creación si restaurante no existe")
+        @DisplayName("Error: Debe rechazar creacion si restaurante no existe")
         void shouldRejectCreationWhenRestaurantNotExists() {
-            // Arrange
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.empty());
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(RestaurantNotFoundException.class, () -> dishUseCase.createDish(validDish));
 
             verify(dishPersistencePort, never()).saveDish(any(DishModel.class));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar creación por usuario no propietario")
+        @DisplayName("Error: Debe rechazar creacion por usuario no propietario")
         void shouldRejectCreationByNonOwner() {
-            // Arrange
             Long differentOwnerId = 999L;
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
             when(securityContextPort.getCurrentUserId()).thenReturn(differentOwnerId);
 
-            // Act & Assert
             assertThrows(UnauthorizedDishOperationException.class, () -> dishUseCase.createDish(validDish));
 
             verify(dishPersistencePort, never()).saveDish(any(DishModel.class));
@@ -161,113 +143,100 @@ class DishUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe actualizar precio del plato")
         void shouldUpdateDishPrice() {
-            // Arrange
             DishModel updateData = new DishModel();
             updateData.setPrice(30000);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             DishModel result = dishUseCase.updateDish(validDish.getId(), updateData);
 
-            // Assert
             assertNotNull(result);
             verify(dishPersistencePort).saveDish(argThat(dish -> dish.getPrice() == 30000));
         }
 
         @Test
-        @DisplayName("Happy Path: Debe actualizar descripción del plato")
+        @DisplayName("Happy Path: Debe actualizar descripcion del plato")
         void shouldUpdateDishDescription() {
-            // Arrange
             DishModel updateData = new DishModel();
-            updateData.setDescription("Nueva descripción actualizada");
+            updateData.setDescription("Nueva descripcion actualizada");
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             dishUseCase.updateDish(validDish.getId(), updateData);
 
-            // Assert
             verify(dishPersistencePort).saveDish(argThat(dish ->
-                "Nueva descripción actualizada".equals(dish.getDescription())
+                "Nueva descripcion actualizada".equals(dish.getDescription())
             ));
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar precio negativo o cero")
+        @DisplayName("Validacion: Debe rechazar precio negativo o cero")
         void shouldRejectNegativeOrZeroPrice() {
-            // Arrange
             DishModel updateData = new DishModel();
             updateData.setPrice(0);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
 
-            // Act & Assert
-            assertThrows(InvalidDishException.class, () -> dishUseCase.updateDish(validDish.getId(), updateData));
+            Long dishId = validDish.getId();
+            assertThrows(InvalidDishException.class, () -> {
+                dishUseCase.updateDish(dishId, updateData);
+            });
 
             verify(dishPersistencePort, never()).saveDish(any(DishModel.class));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar actualización de plato inexistente")
+        @DisplayName("Error: Debe rechazar actualizacion de plato inexistente")
         void shouldRejectUpdateOfNonExistentDish() {
-            // Arrange
             DishModel updateData = new DishModel();
             updateData.setPrice(30000);
+            Long dishId = validDish.getId();
 
-            when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.empty());
+            when(dishPersistencePort.findById(dishId)).thenReturn(Optional.empty());
 
-            // Act & Assert
-            assertThrows(DishNotFoundException.class, () -> dishUseCase.updateDish(validDish.getId(), updateData));
+            assertThrows(DishNotFoundException.class, () -> dishUseCase.updateDish(dishId, updateData));
         }
 
         @Test
-        @DisplayName("Validación: Debe ignorar descripción vacía en actualización")
+        @DisplayName("Validacion: Debe ignorar descripcion vacia en actualizacion")
         void shouldIgnoreEmptyDescriptionInUpdate() {
-            // Arrange
             String originalDescription = validDish.getDescription();
             DishModel updateData = new DishModel();
             updateData.setDescription("");
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             dishUseCase.updateDish(validDish.getId(), updateData);
 
-            // Assert - La descripción original debe mantenerse
             verify(dishPersistencePort).saveDish(argThat(dish ->
                 originalDescription.equals(dish.getDescription())
             ));
         }
 
         @Test
-        @DisplayName("Validación: Debe permitir actualización solo de precio")
+        @DisplayName("Validacion: Debe permitir actualizacion solo de precio")
         void shouldAllowPriceOnlyUpdate() {
-            // Arrange
             DishModel updateData = new DishModel();
             updateData.setPrice(35000);
-            // No se actualiza descripción
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             dishUseCase.updateDish(validDish.getId(), updateData);
 
-            // Assert
             verify(dishPersistencePort).saveDish(any(DishModel.class));
         }
     }
@@ -279,52 +248,47 @@ class DishUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe deshabilitar plato activo")
         void shouldDisableActiveDish() {
-            // Arrange
             validDish.setActive(true);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
-            DishModel result = dishUseCase.toggleDishStatus(validDish.getId());
+            Long dishId = validDish.getId();
+            dishUseCase.toggleDishStatus(dishId);
 
-            // Assert
             verify(dishPersistencePort).saveDish(argThat(dish -> !dish.getActive()));
         }
 
         @Test
         @DisplayName("Happy Path: Debe habilitar plato inactivo")
         void shouldEnableInactiveDish() {
-            // Arrange
             validDish.setActive(false);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
-            dishUseCase.toggleDishStatus(validDish.getId());
+            Long dishId = validDish.getId();
+            dishUseCase.toggleDishStatus(dishId);
 
-            // Assert
-            verify(dishPersistencePort).saveDish(argThat(dish -> dish.getActive()));
+            verify(dishPersistencePort).saveDish(argThat(DishModel::getActive));
         }
 
         @Test
         @DisplayName("Error: Debe rechazar toggle por usuario no autorizado")
         void shouldRejectToggleByUnauthorizedUser() {
-            // Arrange
             Long differentOwnerId = 999L;
+            Long dishId = validDish.getId();
 
-            when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
+            when(dishPersistencePort.findById(dishId)).thenReturn(Optional.of(validDish));
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
             when(securityContextPort.getCurrentUserId()).thenReturn(differentOwnerId);
 
-            // Act & Assert
             assertThrows(UnauthorizedDishOperationException.class,
-                () -> dishUseCase.toggleDishStatus(validDish.getId()));
+                () -> dishUseCase.toggleDishStatus(dishId));
 
             verify(dishPersistencePort, never()).saveDish(any(DishModel.class));
         }
@@ -337,7 +301,6 @@ class DishUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe listar platos de un restaurante")
         void shouldListDishesFromRestaurant() {
-            // Arrange
             DishModel dish1 = createDish(1L, "Plato 1", CategoryEnum.PLATOS_FUERTES);
             DishModel dish2 = createDish(2L, "Plato 2", CategoryEnum.SOPAS);
             DishModel dish3 = createDish(3L, "Plato 3", CategoryEnum.POSTRES);
@@ -346,24 +309,21 @@ class DishUseCaseTest {
             Pageable pageable = PageRequest.of(0, 10);
             Page<DishModel> dishPage = new PageImpl<>(dishes, pageable, dishes.size());
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(dishPersistencePort.findByRestaurantId(RESTAURANT_ID, null, pageable)).thenReturn(dishPage);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(dishPersistencePort.findByRestaurantId(restaurantId, null, pageable)).thenReturn(dishPage);
 
-            // Act
-            Page<DishModel> result = dishUseCase.listDishesByRestaurant(RESTAURANT_ID, null, pageable);
+            Page<DishModel> result = dishUseCase.listDishesByRestaurant(restaurantId, null, pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(3, result.getTotalElements());
             assertEquals(3, result.getContent().size());
 
-            verify(dishPersistencePort).findByRestaurantId(RESTAURANT_ID, null, pageable);
+            verify(dishPersistencePort).findByRestaurantId(restaurantId, null, pageable);
         }
 
         @Test
-        @DisplayName("Validación: Debe filtrar platos por categoría")
+        @DisplayName("Validacion: Debe filtrar platos por categoria")
         void shouldFilterDishesByCategory() {
-            // Arrange
             DishModel dish1 = createDish(1L, "Postre 1", CategoryEnum.POSTRES);
             DishModel dish2 = createDish(2L, "Postre 2", CategoryEnum.POSTRES);
 
@@ -371,52 +331,45 @@ class DishUseCaseTest {
             Pageable pageable = PageRequest.of(0, 10);
             Page<DishModel> dishPage = new PageImpl<>(dishes, pageable, dishes.size());
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(dishPersistencePort.findByRestaurantId(RESTAURANT_ID, CategoryEnum.POSTRES, pageable))
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(dishPersistencePort.findByRestaurantId(restaurantId, CategoryEnum.POSTRES, pageable))
                 .thenReturn(dishPage);
 
-            // Act
-            Page<DishModel> result = dishUseCase.listDishesByRestaurant(RESTAURANT_ID, CategoryEnum.POSTRES, pageable);
+            Page<DishModel> result = dishUseCase.listDishesByRestaurant(restaurantId, CategoryEnum.POSTRES, pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(2, result.getTotalElements());
             result.getContent().forEach(dish ->
                 assertEquals(CategoryEnum.POSTRES, dish.getCategory())
             );
 
-            verify(dishPersistencePort).findByRestaurantId(RESTAURANT_ID, CategoryEnum.POSTRES, pageable);
+            verify(dishPersistencePort).findByRestaurantId(restaurantId, CategoryEnum.POSTRES, pageable);
         }
 
         @Test
         @DisplayName("Error: Debe rechazar listado de restaurante inexistente")
         void shouldRejectListingFromNonExistentRestaurant() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.empty());
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(RestaurantNotFoundException.class,
-                () -> dishUseCase.listDishesByRestaurant(RESTAURANT_ID, null, pageable));
+                () -> dishUseCase.listDishesByRestaurant(restaurantId, null, pageable));
 
             verify(dishPersistencePort, never()).findByRestaurantId(anyLong(), any(), any());
         }
 
         @Test
-        @DisplayName("Validación: Debe retornar página vacía cuando no hay platos")
+        @DisplayName("Validacion: Debe retornar pagina vacia cuando no hay platos")
         void shouldReturnEmptyPageWhenNoDishes() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
             Page<DishModel> emptyPage = new PageImpl<>(Arrays.asList(), pageable, 0);
 
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(dishPersistencePort.findByRestaurantId(RESTAURANT_ID, null, pageable)).thenReturn(emptyPage);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(dishPersistencePort.findByRestaurantId(restaurantId, null, pageable)).thenReturn(emptyPage);
 
-            // Act
-            Page<DishModel> result = dishUseCase.listDishesByRestaurant(RESTAURANT_ID, null, pageable);
+            Page<DishModel> result = dishUseCase.listDishesByRestaurant(restaurantId, null, pageable);
 
-            // Assert
             assertNotNull(result);
             assertTrue(result.getContent().isEmpty());
             assertEquals(0, result.getTotalElements());
@@ -428,75 +381,69 @@ class DishUseCaseTest {
     class EdgeCasesTests {
 
         @Test
-        @DisplayName("Edge Case: Actualización con precio muy alto debe funcionar")
+        @DisplayName("Edge Case: Actualizacion con precio muy alto debe funcionar")
         void shouldAllowVeryHighPrice() {
-            // Arrange
             DishModel updateData = new DishModel();
-            updateData.setPrice(1000000); // 1 millón
+            updateData.setPrice(1000000);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenReturn(validDish);
 
-            // Act
             dishUseCase.updateDish(validDish.getId(), updateData);
 
-            // Assert
             verify(dishPersistencePort).saveDish(argThat(dish -> dish.getPrice() == 1000000));
         }
 
         @Test
         @DisplayName("Edge Case: Debe rechazar precio -1")
         void shouldRejectNegativePrice() {
-            // Arrange
             DishModel updateData = new DishModel();
             updateData.setPrice(-1);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
 
-            // Act & Assert
-            assertThrows(InvalidDishException.class, () -> dishUseCase.updateDish(validDish.getId(), updateData));
+            Long dishId = validDish.getId();
+            assertThrows(InvalidDishException.class, () -> {
+                dishUseCase.updateDish(dishId, updateData);
+            });
         }
 
         @Test
-        @DisplayName("Edge Case: Toggle múltiple debe alternar correctamente")
+        @DisplayName("Edge Case: Toggle multiple debe alternar correctamente")
         void shouldToggleMultipleTimes() {
-            // Arrange
             validDish.setActive(true);
 
             when(dishPersistencePort.findById(validDish.getId())).thenReturn(Optional.of(validDish));
-            when(restaurantPersistencePort.findById(RESTAURANT_ID)).thenReturn(Optional.of(restaurant));
-            when(securityContextPort.getCurrentUserId()).thenReturn(OWNER_ID);
+            when(restaurantPersistencePort.findById(restaurantId)).thenReturn(Optional.of(restaurant));
+            when(securityContextPort.getCurrentUserId()).thenReturn(ownerId);
             when(dishPersistencePort.saveDish(any(DishModel.class))).thenAnswer(invocation -> {
                 DishModel dish = invocation.getArgument(0);
                 validDish.setActive(dish.getActive());
                 return dish;
             });
 
-            // Act & Assert - Primera vez: activo -> inactivo
             dishUseCase.toggleDishStatus(validDish.getId());
             assertFalse(validDish.getActive());
 
-            // Segunda vez: inactivo -> activo
             dishUseCase.toggleDishStatus(validDish.getId());
             assertTrue(validDish.getActive());
         }
     }
 
-    // Métodos auxiliares
     private DishModel createDish(Long id, String name, CategoryEnum category) {
         DishModel dish = new DishModel();
         dish.setId(id);
         dish.setName(name);
         dish.setPrice(15000);
-        dish.setDescription("Descripción de " + name);
+        dish.setDescription("Descripcion de " + name);
         dish.setUrlImage("https://example.com/" + id + ".jpg");
         dish.setCategory(category);
         dish.setActive(true);
-        dish.setRestaurantId(RESTAURANT_ID);
+        dish.setRestaurantId(restaurantId);
         return dish;
     }
 }

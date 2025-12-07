@@ -27,21 +27,10 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 
-/**
- * Pruebas unitarias para OrderUseCase
- * Cubre las siguientes Historias de Usuario:
- * - HU11: Realizar pedido
- * - HU12: Obtener lista de pedidos filtrando por estado
- * - HU13: Asignarse a un pedido y cambiar estado a "en preparación"
- * - HU14: Notificar que el pedido está listo
- * - HU15: Entregar pedido (Marcarlo como entregado)
- * - HU16: Cancelar pedido
- */
 @ExtendWith(MockitoExtension.class)
-@DisplayName("OrderUseCase - Gestión de Pedidos")
+@DisplayName("OrderUseCase - Gestion de Pedidos")
 class OrderUseCaseTest {
 
     @Mock
@@ -105,7 +94,6 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe crear pedido correctamente")
         void shouldCreateOrderSuccessfully() {
-            // Arrange
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
             when(orderPersistencePort.getActiveOrderByUserId(CLIENT_ID)).thenReturn(Optional.empty());
             when(smsUseCase.generateSecurityPin()).thenReturn(SECURITY_PIN);
@@ -113,10 +101,8 @@ class OrderUseCaseTest {
             when(userValidationPort.getUserById(CLIENT_ID)).thenReturn(Optional.of(client));
             doNothing().when(orderAuditPort).registerStatusChange(any());
 
-            // Act
             OrderModel result = orderUseCase.createOrder(validOrder);
 
-            // Assert
             assertNotNull(result);
             assertEquals(OrderStatusEnum.PENDIENT, result.getStatus());
             assertNotNull(result.getSecurityPin());
@@ -125,9 +111,8 @@ class OrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe asignar estado PENDIENT automáticamente")
+        @DisplayName("Validacion: Debe asignar estado PENDIENT automaticamente")
         void shouldSetPendingStatusAutomatically() {
-            // Arrange
             validOrder.setStatus(null);
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
             when(orderPersistencePort.getActiveOrderByUserId(CLIENT_ID)).thenReturn(Optional.empty());
@@ -136,10 +121,8 @@ class OrderUseCaseTest {
             when(userValidationPort.getUserById(CLIENT_ID)).thenReturn(Optional.of(client));
             doNothing().when(orderAuditPort).registerStatusChange(any());
 
-            // Act
             orderUseCase.createOrder(validOrder);
 
-            // Assert
             verify(orderPersistencePort).saveOrder(argThat(order ->
                 order.getStatus() == OrderStatusEnum.PENDIENT
             ));
@@ -148,14 +131,12 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Error: Debe rechazar si el cliente ya tiene un pedido activo")
         void shouldRejectWhenClientHasActiveOrder() {
-            // Arrange
             OrderModel activeOrder = new OrderModel();
             activeOrder.setStatus(OrderStatusEnum.IN_PREPARE);
 
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
             when(orderPersistencePort.getActiveOrderByUserId(CLIENT_ID)).thenReturn(Optional.of(activeOrder));
 
-            // Act & Assert
             assertThrows(UnauthorizedDishOperationException.class, () -> orderUseCase.createOrder(validOrder));
             verify(orderPersistencePort, never()).saveOrder(any());
         }
@@ -168,7 +149,6 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe listar pedidos filtrados por estado")
         void shouldListOrdersFilteredByStatus() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
             Page<OrderModel> orderPage = new PageImpl<>(Arrays.asList(validOrder));
 
@@ -178,19 +158,16 @@ class OrderUseCaseTest {
                 OrderStatusEnum.PENDIENT, RESTAURANT_ID, pageable
             )).thenReturn(orderPage);
 
-            // Act
             Page<OrderModel> result = orderUseCase.listOrdersByStatusAndRestaurant("PENDIENT", pageable);
 
-            // Assert
             assertNotNull(result);
             assertEquals(1, result.getTotalElements());
             verify(orderPersistencePort).listOrdersByStatusAndRestaurant(OrderStatusEnum.PENDIENT, RESTAURANT_ID, pageable);
         }
 
         @Test
-        @DisplayName("Validación: Debe listar todos los pedidos sin filtro de estado")
+        @DisplayName("Validacion: Debe listar todos los pedidos sin filtro de estado")
         void shouldListAllOrdersWhenNoStatusFilter() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
             Page<OrderModel> orderPage = new PageImpl<>(Arrays.asList(validOrder));
 
@@ -198,10 +175,8 @@ class OrderUseCaseTest {
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
             when(orderPersistencePort.listOrdersByRestaurant(RESTAURANT_ID, pageable)).thenReturn(orderPage);
 
-            // Act
             Page<OrderModel> result = orderUseCase.listOrdersByStatusAndRestaurant(null, pageable);
 
-            // Assert
             assertNotNull(result);
             verify(orderPersistencePort).listOrdersByRestaurant(RESTAURANT_ID, pageable);
         }
@@ -209,37 +184,32 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Error: Debe rechazar si el empleado no tiene restaurante asignado")
         void shouldRejectWhenEmployeeHasNoRestaurant() {
-            // Arrange
             employee.setRestaurantWorkId(null);
             Pageable pageable = PageRequest.of(0, 10);
 
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(RestaurantNotFoundException.class,
                 () -> orderUseCase.listOrdersByStatusAndRestaurant("PENDIENT", pageable));
         }
     }
 
     @Nested
-    @DisplayName("HU13: Asignarse a un pedido y cambiar estado a 'en preparación'")
+    @DisplayName("HU13: Asignarse a un pedido y cambiar estado a 'en preparacion'")
     class AssignOrderTests {
 
         @Test
         @DisplayName("Happy Path: Debe asignar pedido a empleado correctamente")
         void shouldAssignOrderToEmployeeSuccessfully() {
-            // Arrange
             when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
             when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(validOrder);
             doNothing().when(orderAuditPort).registerStatusChange(any());
 
-            // Act
             OrderModel result = orderUseCase.assignOrderToEmployee(validOrder.getId());
 
-            // Assert
             assertNotNull(result);
             verify(orderPersistencePort).updateOrder(argThat(order ->
                 order.getEmployee().equals(EMPLOYEE_ID) &&
@@ -249,45 +219,43 @@ class OrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar asignación si pedido no está PENDIENT")
+        @DisplayName("Validacion: Debe rechazar asignacion si pedido no esta PENDIENT")
         void shouldRejectAssignmentWhenOrderNotPending() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
 
             when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
-            assertThrows(InvalidOrderStatusException.class,
-                () -> orderUseCase.assignOrderToEmployee(validOrder.getId()));
+            Long orderId = validOrder.getId();
+            assertThrows(InvalidOrderStatusException.class, () -> {
+                orderUseCase.assignOrderToEmployee(orderId);
+            });
             verify(orderPersistencePort, never()).updateOrder(any());
         }
 
         @Test
         @DisplayName("Error: Debe rechazar si empleado no pertenece al restaurante")
         void shouldRejectWhenEmployeeNotFromRestaurant() {
-            // Arrange
-            employee.setRestaurantWorkId(999L); // Otro restaurante
+            employee.setRestaurantWorkId(999L);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(UnauthorizedOperationException.class,
-                () -> orderUseCase.assignOrderToEmployee(validOrder.getId()));
+                () -> orderUseCase.assignOrderToEmployee(orderId));
         }
     }
 
     @Nested
-    @DisplayName("HU14: Notificar que el pedido está listo")
+    @DisplayName("HU14: Notificar que el pedido esta listo")
     class MarkOrderAsReadyTests {
 
         @Test
         @DisplayName("Happy Path: Debe marcar pedido como listo y enviar SMS")
         void shouldMarkOrderAsReadyAndSendSms() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
             validOrder.setEmployee(EMPLOYEE_ID);
 
@@ -299,10 +267,8 @@ class OrderUseCaseTest {
             doNothing().when(orderAuditPort).registerStatusChange(any());
             doNothing().when(smsUseCase).sendOrderReadyNotification(any(), any());
 
-            // Act
             OrderModel result = orderUseCase.markOrderAsReady(validOrder.getId());
 
-            // Assert
             assertNotNull(result);
             verify(orderPersistencePort).updateOrder(argThat(order ->
                 order.getStatus() == OrderStatusEnum.READY
@@ -311,35 +277,33 @@ class OrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar si pedido no está EN PREPARACIÓN")
+        @DisplayName("Validacion: Debe rechazar si pedido no esta EN PREPARACION")
         void shouldRejectWhenOrderNotInPrepare() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.PENDIENT);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(InvalidOrderStatusException.class,
-                () -> orderUseCase.markOrderAsReady(validOrder.getId()));
+                () -> orderUseCase.markOrderAsReady(orderId));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar si cliente no tiene teléfono")
+        @DisplayName("Error: Debe rechazar si cliente no tiene telefono")
         void shouldRejectWhenClientHasNoPhone() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
             client.setPhoneNumber(null);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
             when(userValidationPort.getUserById(CLIENT_ID)).thenReturn(Optional.of(client));
 
-            // Act & Assert
             assertThrows(InvalidOrderStatusException.class,
-                () -> orderUseCase.markOrderAsReady(validOrder.getId()));
+                () -> orderUseCase.markOrderAsReady(orderId));
         }
     }
 
@@ -350,7 +314,6 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe entregar pedido con PIN correcto")
         void shouldDeliverOrderWithCorrectPin() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.READY);
             validOrder.setEmployee(EMPLOYEE_ID);
 
@@ -360,10 +323,8 @@ class OrderUseCaseTest {
             when(orderPersistencePort.updateOrder(any(OrderModel.class))).thenReturn(validOrder);
             doNothing().when(orderAuditPort).registerStatusChange(any());
 
-            // Act
             OrderModel result = orderUseCase.deliverOrder(validOrder.getId(), SECURITY_PIN);
 
-            // Assert
             assertNotNull(result);
             verify(orderPersistencePort).updateOrder(argThat(order ->
                 order.getStatus() == OrderStatusEnum.DELIVERED
@@ -371,64 +332,57 @@ class OrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar PIN incorrecto")
+        @DisplayName("Validacion: Debe rechazar PIN incorrecto")
         void shouldRejectIncorrectPin() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.READY);
             validOrder.setEmployee(EMPLOYEE_ID);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(InvalidSecurityPinException.class,
-                () -> orderUseCase.deliverOrder(validOrder.getId(), "wrongPIN"));
+                () -> orderUseCase.deliverOrder(orderId, "wrongPIN"));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar si pedido no está LISTO")
+        @DisplayName("Error: Debe rechazar si pedido no esta LISTO")
         void shouldRejectWhenOrderNotReady() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
             validOrder.setEmployee(EMPLOYEE_ID);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(InvalidOrderStatusException.class,
-                () -> orderUseCase.deliverOrder(validOrder.getId(), SECURITY_PIN));
+                () -> orderUseCase.deliverOrder(orderId, SECURITY_PIN));
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar si empleado no es el asignado")
+        @DisplayName("Validacion: Debe rechazar si empleado no es el asignado")
         void shouldRejectWhenEmployeeNotAssigned() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.READY);
-            validOrder.setEmployee(999L); // Otro empleado
+            validOrder.setEmployee(999L);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(EMPLOYEE_ID);
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
 
-            // Act & Assert
             assertThrows(UnauthorizedOperationException.class,
-                () -> orderUseCase.deliverOrder(validOrder.getId(), SECURITY_PIN));
+                () -> orderUseCase.deliverOrder(orderId, SECURITY_PIN));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar PIN vacío")
+        @DisplayName("Error: Debe rechazar PIN vacio")
         void shouldRejectEmptyPin() {
-            // Arrange
-            validOrder.setStatus(OrderStatusEnum.READY);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
-
-            // Act & Assert
             assertThrows(InvalidSecurityPinException.class,
-                () -> orderUseCase.deliverOrder(validOrder.getId(), ""));
+                () -> orderUseCase.deliverOrder(orderId, ""));
         }
     }
 
@@ -439,7 +393,6 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe cancelar pedido PENDIENT correctamente")
         void shouldCancelPendingOrderSuccessfully() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.PENDIENT);
 
             when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
@@ -449,10 +402,8 @@ class OrderUseCaseTest {
             doNothing().when(orderAuditPort).registerStatusChange(any());
             doNothing().when(smsUseCase).sendOrderCancelledNotification(any(), any());
 
-            // Act
             OrderModel result = orderUseCase.cancelOrder(validOrder.getId());
 
-            // Assert
             assertNotNull(result);
             verify(orderPersistencePort).updateOrder(argThat(order ->
                 order.getStatus() == OrderStatusEnum.CANCELLED
@@ -461,31 +412,29 @@ class OrderUseCaseTest {
         }
 
         @Test
-        @DisplayName("Validación: Debe rechazar cancelación si no es el cliente dueño")
+        @DisplayName("Validacion: Debe rechazar cancelacion si no es el cliente dueño")
         void shouldRejectCancellationByNonOwner() {
-            // Arrange
-            validOrder.setClient(999L); // Otro cliente
+            validOrder.setClient(999L);
+            Long orderId = validOrder.getId();
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
 
-            // Act & Assert
             assertThrows(UnauthorizedOperationException.class,
-                () -> orderUseCase.cancelOrder(validOrder.getId()));
+                () -> orderUseCase.cancelOrder(orderId));
         }
 
         @Test
-        @DisplayName("Error: Debe rechazar cancelación si pedido no está PENDIENT")
+        @DisplayName("Error: Debe rechazar cancelacion si pedido no esta PENDIENT")
         void shouldRejectCancellationWhenOrderNotPending() {
-            // Arrange
+            Long orderId = validOrder.getId();
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
 
-            when(orderPersistencePort.findById(validOrder.getId())).thenReturn(Optional.of(validOrder));
+            when(orderPersistencePort.findById(orderId)).thenReturn(Optional.of(validOrder));
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
 
-            // Act & Assert
             assertThrows(OrderCancellationException.class,
-                () -> orderUseCase.cancelOrder(validOrder.getId()));
+                () -> orderUseCase.cancelOrder(orderId));
         }
     }
 
@@ -494,12 +443,10 @@ class OrderUseCaseTest {
     class EdgeCasesTests {
 
         @Test
-        @DisplayName("Edge Case: Pedido inexistente debe lanzar excepción")
+        @DisplayName("Edge Case: Pedido inexistente debe lanzar excepcion")
         void shouldThrowExceptionForNonExistentOrder() {
-            // Arrange
             when(orderPersistencePort.findById(999L)).thenReturn(Optional.empty());
 
-            // Act & Assert
             assertThrows(OrderNotFoundException.class,
                 () -> orderUseCase.assignOrderToEmployee(999L));
         }
@@ -507,18 +454,17 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Edge Case: PIN null debe ser rechazado")
         void shouldRejectNullPin() {
-            // Arrange
             validOrder.setStatus(OrderStatusEnum.READY);
 
-            // Act & Assert
-            assertThrows(InvalidSecurityPinException.class,
-                () -> orderUseCase.deliverOrder(validOrder.getId(), null));
+            Long orderId = validOrder.getId();
+            assertThrows(InvalidSecurityPinException.class, () -> {
+                orderUseCase.deliverOrder(orderId, null);
+            });
         }
 
         @Test
-        @DisplayName("Edge Case: Estado vacío debe listar todos")
+        @DisplayName("Edge Case: Estado vacio debe listar todos")
         void shouldListAllOrdersWithEmptyStatus() {
-            // Arrange
             Pageable pageable = PageRequest.of(0, 10);
             Page<OrderModel> orderPage = new PageImpl<>(Arrays.asList(validOrder));
 
@@ -526,12 +472,10 @@ class OrderUseCaseTest {
             when(userValidationPort.getUserById(EMPLOYEE_ID)).thenReturn(Optional.of(employee));
             when(orderPersistencePort.listOrdersByRestaurant(RESTAURANT_ID, pageable)).thenReturn(orderPage);
 
-            // Act
             Page<OrderModel> result = orderUseCase.listOrdersByStatusAndRestaurant("", pageable);
 
-            // Assert
+            assertNotNull(result);
             verify(orderPersistencePort).listOrdersByRestaurant(RESTAURANT_ID, pageable);
         }
     }
 }
-
