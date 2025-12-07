@@ -1,10 +1,12 @@
 package com.pragma.powerup.infrastructure.configuration;
 
 import com.pragma.powerup.domain.api.IDishServicePort;
+import com.pragma.powerup.domain.api.IMetricsServicePort;
 import com.pragma.powerup.domain.api.IOrderServicePort;
 import com.pragma.powerup.domain.api.IRestaurantServicePort;
 import com.pragma.powerup.domain.spi.*;
 import com.pragma.powerup.domain.usecase.DishUseCase;
+import com.pragma.powerup.domain.usecase.MetricsUseCase;
 import com.pragma.powerup.domain.usecase.OrderUseCase;
 import com.pragma.powerup.domain.usecase.RestaurantUseCase;
 import com.pragma.powerup.domain.usecase.SmsUseCase;
@@ -48,5 +50,10 @@ public class BeanConfiguration {
                 orderAuditPort,
                 smsUseCase
         );
+    }
+
+    @Bean
+    public IMetricsServicePort metricsServicePort(IOrderAuditPort orderAuditPort) {
+        return new MetricsUseCase(orderAuditPort);
     }
 }

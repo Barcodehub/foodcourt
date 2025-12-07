@@ -15,9 +15,6 @@ public class SecurityContextUtil {
     private final HttpServletRequest request;
     private final ObjectMapper objectMapper;
 
-    /**
-     * Decodifica el token JWT del header Authorization y extrae el payload como Map
-     */
     private Map<String, Object> getJwtClaims() {
         try {
             String token = request.getHeader("Authorization");

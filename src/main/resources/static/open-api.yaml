@@ -610,6 +610,195 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /metrics/orders-duration:
+    get:
+      tags:
+        - Metrics
+      summary: Obtener duración de pedidos
+      description: |
+        Obtiene el tiempo de duración de cada pedido desde que inicia (estado Pendiente) 
+        hasta que termina (estado Entregado o Cancelado). Permite identificar pedidos 
+        que tardan más que el promedio para optimizarlos.
+      operationId: getOrdersDurationMetrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: restaurantId
+          in: query
+          description: ID del restaurante para filtrar pedidos
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          description: Fecha de inicio del rango de consulta (formato ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-01T00:00:00"
+        - name: endDate
+          in: query
+          description: Fecha de fin del rango de consulta (formato ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-31T23:59:59"
+        - name: page
+          in: query
+          description: Número de página
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Tamaño de página
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sortBy
+          in: query
+          description: Campo por el cual ordenar (durationMinutes, orderId, completedAt)
+          required: false
+          schema:
+            type: string
+            default: "durationMinutes"
+            enum:
+              - durationMinutes
+              - orderId
+              - completedAt
+        - name: sortDirection
+          in: query
+          description: Dirección del ordenamiento
+          required: false
+          schema:
+            type: string
+            default: "DESC"
+            enum:
+              - ASC
+              - DESC
+      responses:
+        '200':
+          description: Métricas obtenidas exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OrdersDurationMetricsResponse'
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /metrics/employee-efficiency:
+    get:
+      tags:
+        - Metrics
+      summary: Obtener ranking de eficiencia de empleados
+      description: |
+        Obtiene un ranking de empleados mostrando el tiempo medio entre que un pedido 
+        inicia (Pendiente) y termina (Entregado o Cancelado). Permite identificar 
+        empleados con mejor rendimiento.
+      operationId: getEmployeeEfficiencyMetrics
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: restaurantId
+          in: query
+          description: ID del restaurante para filtrar empleados
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: startDate
+          in: query
+          description: Fecha de inicio del rango de consulta (formato ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-01T00:00:00"
+        - name: endDate
+          in: query
+          description: Fecha de fin del rango de consulta (formato ISO 8601)
+          required: false
+          schema:
+            type: string
+            format: date-time
+            example: "2025-12-31T23:59:59"
+        - name: minOrdersCompleted
+          in: query
+          description: Número mínimo de pedidos completados para aparecer en el ranking
+          required: false
+          schema:
+            type: integer
+            default: 1
+        - name: page
+          in: query
+          description: Número de página
+          required: false
+          schema:
+            type: integer
+            default: 0
+        - name: size
+          in: query
+          description: Tamaño de página
+          required: false
+          schema:
+            type: integer
+            default: 20
+        - name: sortBy
+          in: query
+          description: Campo por el cual ordenar (averageDurationMinutes, totalOrdersCompleted, employeeId)
+          required: false
+          schema:
+            type: string
+            default: "averageDurationMinutes"
+            enum:
+              - averageDurationMinutes
+              - totalOrdersCompleted
+              - employeeId
+        - name: sortDirection
+          in: query
+          description: Dirección del ordenamiento
+          required: false
+          schema:
+            type: string
+            default: "ASC"
+            enum:
+              - ASC
+              - DESC
+      responses:
+        '200':
+          description: Ranking de eficiencia obtenido exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EmployeeEfficiencyMetricsResponse'
+        '400':
+          description: Parámetros de consulta inválidos
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '500':
+          description: Error interno del servidor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
 components:
   schemas:
     RestaurantRequest:
@@ -1236,6 +1425,187 @@ components:
             $ref: '#/components/schemas/OrderStatusAuditResponse'
         meta:
           $ref: '#/components/schemas/PaginationMeta'
+
+    # Schemas para métricas de duración de pedidos
+    OrdersDurationMetricsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            orders:
+              type: array
+              items:
+                $ref: '#/components/schemas/OrderDurationMetric'
+            summary:
+              $ref: '#/components/schemas/DurationSummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    OrderDurationMetric:
+      type: object
+      properties:
+        orderId:
+          type: integer
+          format: int64
+          description: ID del pedido
+          example: 1
+        clientId:
+          type: integer
+          format: int64
+          description: ID del cliente
+          example: 10
+        employeeId:
+          type: integer
+          format: int64
+          description: ID del empleado que procesó el pedido
+          example: 7
+        startedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora cuando el pedido inició (estado Pendiente)
+          example: "2025-12-02T10:00:00Z"
+        completedAt:
+          type: string
+          format: date-time
+          description: Fecha y hora cuando el pedido finalizó (Entregado o Cancelado)
+          example: "2025-12-02T10:45:00Z"
+        finalStatus:
+          type: string
+          description: Estado final del pedido
+          enum:
+            - ENTREGADO
+            - CANCELADO
+          example: "ENTREGADO"
+        durationMinutes:
+          type: integer
+          format: int64
+          description: Duración total del pedido en minutos
+          example: 45
+
+    DurationSummary:
+      type: object
+      properties:
+        totalOrders:
+          type: integer
+          description: Total de pedidos completados en el período
+          example: 150
+        averageDurationMinutes:
+          type: number
+          format: double
+          description: Duración promedio de todos los pedidos en minutos
+          example: 30.5
+        minDurationMinutes:
+          type: integer
+          format: int64
+          description: Duración mínima encontrada
+          example: 15
+        maxDurationMinutes:
+          type: integer
+          format: int64
+          description: Duración máxima encontrada
+          example: 120
+        medianDurationMinutes:
+          type: number
+          format: double
+          description: Mediana de la duración
+          example: 28.0
+        deliveredCount:
+          type: integer
+          description: Cantidad de pedidos entregados
+          example: 140
+        cancelledCount:
+          type: integer
+          description: Cantidad de pedidos cancelados
+          example: 10
+
+    # Schemas para métricas de eficiencia de empleados
+    EmployeeEfficiencyMetricsResponse:
+      type: object
+      properties:
+        data:
+          type: object
+          properties:
+            ranking:
+              type: array
+              items:
+                $ref: '#/components/schemas/EmployeeEfficiencyMetric'
+            summary:
+              $ref: '#/components/schemas/EmployeeEfficiencySummary'
+        meta:
+          $ref: '#/components/schemas/PaginationMeta'
+
+    EmployeeEfficiencyMetric:
+      type: object
+      properties:
+        rank:
+          type: integer
+          description: Posición en el ranking (1 = más eficiente)
+          example: 1
+        employeeId:
+          type: integer
+          format: int64
+          description: ID del empleado
+          example: 7
+        totalOrdersCompleted:
+          type: integer
+          description: Total de pedidos completados por el empleado
+          example: 45
+        totalOrdersDelivered:
+          type: integer
+          description: Total de pedidos entregados
+          example: 42
+        totalOrdersCancelled:
+          type: integer
+          description: Total de pedidos cancelados
+          example: 3
+        averageDurationMinutes:
+          type: number
+          format: double
+          description: Tiempo promedio de procesamiento en minutos
+          example: 25.5
+        minDurationMinutes:
+          type: integer
+          format: int64
+          description: Tiempo mínimo de procesamiento
+          example: 15
+        maxDurationMinutes:
+          type: integer
+          format: int64
+          description: Tiempo máximo de procesamiento
+          example: 60
+        medianDurationMinutes:
+          type: number
+          format: double
+          description: Mediana del tiempo de procesamiento
+          example: 24.0
+
+    EmployeeEfficiencySummary:
+      type: object
+      properties:
+        totalEmployees:
+          type: integer
+          description: Total de empleados en el ranking
+          example: 15
+        restaurantAverageDurationMinutes:
+          type: number
+          format: double
+          description: Tiempo promedio del restaurante
+          example: 30.5
+        bestEmployeeAverageDurationMinutes:
+          type: number
+          format: double
+          description: Mejor tiempo promedio entre todos los empleados
+          example: 22.0
+        worstEmployeeAverageDurationMinutes:
+          type: number
+          format: double
+          description: Peor tiempo promedio entre todos los empleados
+          example: 45.0
+        totalOrdersProcessed:
+          type: integer
+          description: Total de pedidos procesados en el período
+          example: 450
 
   securitySchemes:
     bearerAuth:

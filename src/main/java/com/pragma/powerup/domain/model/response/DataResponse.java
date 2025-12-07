@@ -5,9 +5,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/**
- * Wrapper genérico para respuestas exitosas con un solo objeto
- */
+
 @Getter
 @Setter
 @AllArgsConstructor
