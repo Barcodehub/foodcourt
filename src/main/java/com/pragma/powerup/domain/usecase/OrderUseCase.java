@@ -5,14 +5,10 @@ import com.pragma.powerup.domain.enums.OrderAuditActionType;
 import com.pragma.powerup.domain.enums.OrderStatusEnum;
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.OrderModel;
-import com.pragma.powerup.domain.model.SmsNotificationModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
-import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IOrderAuditPort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
-import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
-import com.pragma.powerup.domain.spi.ISmsNotificationPort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
 import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
 import jakarta.transaction.Transactional;
@@ -20,9 +16,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.security.SecureRandom;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Optional;
 
 @RequiredArgsConstructor

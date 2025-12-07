@@ -23,13 +23,9 @@ public class RoleSecurityAspect {
     @Before("@annotation(requireRole)")
     public void checkRole(RequireRole requireRole) {
         String currentRole = securityContextUtil.getCurrentUserRole();
-        log.info("Rol extraído del token: {}", currentRole);
-        log.info("Roles requeridos: {}", Arrays.toString(requireRole.value()));
 
         boolean hasRequiredRole = Arrays.stream(requireRole.value())
                 .anyMatch(role -> role.getName().equalsIgnoreCase(currentRole));
-
-        log.info("¿Tiene el rol requerido? {}", hasRequiredRole);
 
         if (!hasRequiredRole) {
             throw new ForbiddenException(

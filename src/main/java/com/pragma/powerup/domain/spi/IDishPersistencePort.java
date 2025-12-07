@@ -10,6 +10,5 @@ import java.util.Optional;
 public interface IDishPersistencePort {
     DishModel saveDish(DishModel dish);
     Optional<DishModel> findById(Long id);
-    DishModel updateDish(DishModel dish);
     Page<DishModel> findByRestaurantId(Long restaurantId, CategoryEnum category, Pageable pageable);
 }

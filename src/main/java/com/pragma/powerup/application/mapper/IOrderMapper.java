@@ -7,11 +7,9 @@ import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.model.DishModel;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
-import org.mapstruct.Named;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring")
 public interface IOrderMapper {
@@ -34,7 +32,7 @@ public interface IOrderMapper {
         List<OrderResponseDto> orderDtos = orderPage.getContent()
                 .stream()
                 .map(this::toResponseDto)
-                .collect(Collectors.toList());
+                .toList();
 
         responseDto.setData(orderDtos);
         responseDto.setPage(orderPage.getNumber());

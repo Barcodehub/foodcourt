@@ -5,7 +5,7 @@ import com.pragma.powerup.apifirst.model.*;
 import java.util.List;
 
 public interface IOrderHandler {
-    OrderDataResponseDto createOrder(OrderRequestDto OrderRequestDto);
+    OrderDataResponseDto createOrder(OrderRequestDto orderRequestDto);
 
     OrderListResponseDto listOrdersByStatusAndRestaurant(String status, Integer page, Integer size);
 

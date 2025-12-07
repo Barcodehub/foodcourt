@@ -12,7 +12,7 @@ public enum CategoryEnum {
     ENSALADAS("Ensaladas"),
     BEBIDAS("Bebidas"),
     POSTRES("Postres"),
-    ACOMPAÑAMIENTOS("Acompañamientos"),
+    ACOMPANAMIENTOS("Acompañamientos"),
     COMIDA_RAPIDA("Comida Rápida");
 
     private final String displayName;

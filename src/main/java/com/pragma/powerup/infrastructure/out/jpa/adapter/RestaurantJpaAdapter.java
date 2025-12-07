@@ -8,12 +8,9 @@ import com.pragma.powerup.infrastructure.out.jpa.repository.IRestaurantRepositor
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Repository
 @RequiredArgsConstructor

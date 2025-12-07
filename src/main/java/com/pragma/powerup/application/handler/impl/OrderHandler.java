@@ -26,8 +26,8 @@ public class OrderHandler implements IOrderHandler {
 
 
     @Override
-    public OrderDataResponseDto createOrder(OrderRequestDto OrderRequestDto) {
-        OrderModel orderModel = orderMapper.toModel(OrderRequestDto);
+    public OrderDataResponseDto createOrder(OrderRequestDto orderRequestDto) {
+        OrderModel orderModel = orderMapper.toModel(orderRequestDto);
         OrderModel savedOrder = orderServicePort.createOrder(orderModel);
         OrderResponseDto responseDto = orderMapper.toResponseDto(savedOrder);
 
@@ -45,8 +45,7 @@ public class OrderHandler implements IOrderHandler {
         );
 
         Page<OrderModel> orderPage = orderServicePort.listOrdersByStatusAndRestaurant(status, pageable);
-        OrderListResponseDto responseDto = orderMapper.toListResponseDto(orderPage);
-        return responseDto;
+        return orderMapper.toListResponseDto(orderPage);
     }
 
     @Override

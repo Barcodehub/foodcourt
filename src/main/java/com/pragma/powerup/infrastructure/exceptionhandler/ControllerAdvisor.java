@@ -3,6 +3,8 @@ package com.pragma.powerup.infrastructure.exceptionhandler;
 import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.infrastructure.exception.NoDataFoundException;
 import com.pragma.powerup.infrastructure.exception.RemoteServiceException;
+import com.pragma.powerup.infrastructure.exception.UnauthenticatedUserException;
+import com.pragma.powerup.infrastructure.exception.InvalidUserIdException;
 import jakarta.validation.ConstraintViolationException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -163,10 +165,10 @@ public class ControllerAdvisor {
     @ResponseBody
     public ResponseEntity<Object> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("error", "Bad Request");
-        body.put("message", "Error de formato o valor inválido en el cuerpo de la solicitud. Detalle: " + ex.getMostSpecificCause().getMessage());
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.BAD_REQUEST.value());
+        body.put(ERROR, "Bad Request");
+        body.put(MESSAGE, "Error de formato o valor inválido en el cuerpo de la solicitud. Detalle: " + ex.getMostSpecificCause().getMessage());
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.BAD_REQUEST.value());
         return new ResponseEntity<>(body, HttpStatus.BAD_REQUEST);
     }
 
@@ -175,10 +177,10 @@ public class ControllerAdvisor {
     @ResponseBody
     public ResponseEntity<Object> handleForbiddenException(ForbiddenException ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("error", "Forbidden");
-        body.put("message", ex.getMessage());
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.FORBIDDEN.value());
+        body.put(ERROR, "Forbidden");
+        body.put(MESSAGE, ex.getMessage());
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.FORBIDDEN.value());
         return new ResponseEntity<>(body, HttpStatus.FORBIDDEN);
     }
 
@@ -272,7 +274,7 @@ public class ControllerAdvisor {
     public ResponseEntity<Map<String, Object>> handleValidationExceptions(
             MethodArgumentNotValidException exception) {
         Map<String, String> errors = new HashMap<>();
-        exception.getBindingResult().getAllErrors().forEach((error) -> {
+        exception.getBindingResult().getAllErrors().forEach(error -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
             errors.put(fieldName, errorMessage);
@@ -299,7 +301,7 @@ public class ControllerAdvisor {
                 .map(v -> Map.of(
                         "property", v.getPropertyPath().toString(),
                         "invalidValue", v.getInvalidValue(),
-                        "message", v.getMessage()
+                        MESSAGE, v.getMessage()
                 )).toList());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
@@ -331,10 +333,10 @@ public class ControllerAdvisor {
     @ResponseBody
     public ResponseEntity<Object> handleHttpMediaTypeNotSupportedException(HttpMediaTypeNotSupportedException ex) {
         Map<String, Object> body = new HashMap<>();
-        body.put("error", "Unsupported Media Type");
-        body.put("message", "El Content-Type enviado no es soportado. Usa 'application/json' para las peticiones.");
-        body.put("timestamp", LocalDateTime.now());
-        body.put("status", HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
+        body.put(ERROR, "Unsupported Media Type");
+        body.put(MESSAGE, "El Content-Type enviado no es soportado. Usa 'application/json' para las peticiones.");
+        body.put(TIMESTAMP, LocalDateTime.now());
+        body.put(STATUS, HttpStatus.UNSUPPORTED_MEDIA_TYPE.value());
         return new ResponseEntity<>(body, HttpStatus.UNSUPPORTED_MEDIA_TYPE);
     }
 
@@ -348,5 +350,25 @@ public class ControllerAdvisor {
         response.put(ERROR, exception.getStatus().getReasonPhrase());
         response.put(MESSAGE, exception.getMessage());
         return ResponseEntity.status(exception.getStatus()).body(response);
+    }
+
+    @ExceptionHandler(UnauthenticatedUserException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthenticatedUserException(UnauthenticatedUserException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.UNAUTHORIZED.value());
+        response.put(ERROR, HttpStatus.UNAUTHORIZED.getReasonPhrase());
+        response.put(MESSAGE, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+
+    @ExceptionHandler(InvalidUserIdException.class)
+    public ResponseEntity<Map<String, Object>> handleInvalidUserIdException(InvalidUserIdException exception) {
+        Map<String, Object> response = new HashMap<>();
+        response.put(TIMESTAMP, LocalDateTime.now());
+        response.put(STATUS, HttpStatus.BAD_REQUEST.value());
+        response.put(ERROR, "Invalid User ID");
+        response.put(MESSAGE, exception.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 }

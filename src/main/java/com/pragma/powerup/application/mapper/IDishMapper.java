@@ -11,7 +11,6 @@ import org.mapstruct.Mapping;
 import org.springframework.data.domain.Page;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Mapper(componentModel = "spring", uses = CategoryConverter.class)
 public interface IDishMapper {
@@ -30,7 +29,7 @@ public interface IDishMapper {
     default DishListResponseDto toListResponseDto(Page<DishModel> page) {
         List<DishResponseDto> content = page.getContent().stream()
             .map(this::toResponseDto)
-            .collect(Collectors.toList());
+            .toList();
 
         DishListResponseDto response = new DishListResponseDto();
         response.data(content);

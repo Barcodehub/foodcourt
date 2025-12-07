@@ -2,7 +2,6 @@ package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.api.IDishServicePort;
 import com.pragma.powerup.domain.enums.CategoryEnum;
-import com.pragma.powerup.domain.enums.RoleEnum;
 import com.pragma.powerup.domain.exception.DishNotFoundException;
 import com.pragma.powerup.domain.exception.InvalidDishException;
 import com.pragma.powerup.domain.exception.RestaurantNotFoundException;
@@ -13,7 +12,6 @@ import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.domain.spi.IRestaurantPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
 import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
-import com.pragma.powerup.infrastructure.security.annotations.RequireRole;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -54,7 +52,7 @@ public class DishUseCase implements IDishServicePort {
             dish.setDescription(dishModel.getDescription());
         }
 
-        return dishPersistencePort.updateDish(dish);
+        return dishPersistencePort.saveDish(dish);
     }
 
     @Override
@@ -62,7 +60,7 @@ public class DishUseCase implements IDishServicePort {
         DishModel dish = getValidatedDish(id);
         dish.setActive(!dish.getActive());
 
-        return dishPersistencePort.updateDish(dish);
+        return dishPersistencePort.saveDish(dish);
     }
 
     @Override
