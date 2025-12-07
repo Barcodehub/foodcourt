@@ -4,6 +4,7 @@ import com.pragma.powerup.domain.api.IOrderServicePort;
 import com.pragma.powerup.domain.enums.OrderAuditActionType;
 import com.pragma.powerup.domain.enums.OrderStatusEnum;
 import com.pragma.powerup.domain.exception.*;
+import com.pragma.powerup.domain.model.OrderAuditModel;
 import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
 import com.pragma.powerup.domain.spi.IOrderAuditPort;
@@ -38,18 +39,18 @@ public class OrderUseCase implements IOrderServicePort {
 
         String role = getRoleOfCurrentUser();
 
-        registerAudit(
-                orderSaved.getId(),
-                orderSaved.getRestaurant().getId(),
-                orderSaved.getClient(),
-                null,
-                OrderStatusEnum.PENDIENT,
-                orderSaved.getClient(),
-                role,
-                OrderAuditActionType.ORDER_CREATED.getValue(),
-                null,
-                "Pedido creado exitosamente"
-        );
+        orderAuditPort.registerStatusChange(OrderAuditModel.builder()
+                .orderId(orderSaved.getId())
+                .restaurantId(orderSaved.getRestaurant().getId())
+                .clientId(orderSaved.getClient())
+                .previousStatus(null)
+                .newStatus(OrderStatusEnum.PENDIENT)
+                .changedByUserId(orderSaved.getClient())
+                .changedByRole(role)
+                .actionType(OrderAuditActionType.ORDER_CREATED.getValue())
+                .employeeId(null)
+                .notes("Pedido creado exitosamente")
+                .build());
 
         return orderSaved;
     }
@@ -98,18 +99,18 @@ public class OrderUseCase implements IOrderServicePort {
 
         String role = getRoleOfCurrentUser();
 
-        registerAudit(
-                updatedOrder.getId(),
-                updatedOrder.getRestaurant().getId(),
-                updatedOrder.getClient(),
-                previousStatus,
-                OrderStatusEnum.IN_PREPARE,
-                employeeId,
-                role,
-                OrderAuditActionType.ASSIGNMENT.getValue(),
-                employeeId,
-                "Pedido asignado a empleado para preparación"
-        );
+        orderAuditPort.registerStatusChange(OrderAuditModel.builder()
+                .orderId(updatedOrder.getId())
+                .restaurantId(updatedOrder.getRestaurant().getId())
+                .clientId(updatedOrder.getClient())
+                .previousStatus(previousStatus)
+                .newStatus(OrderStatusEnum.IN_PREPARE)
+                .changedByUserId(employeeId)
+                .changedByRole(role)
+                .actionType(OrderAuditActionType.ASSIGNMENT.getValue())
+                .employeeId(employeeId)
+                .notes("Pedido asignado a empleado para preparación")
+                .build());
 
         return updatedOrder;
     }
@@ -135,18 +136,18 @@ public class OrderUseCase implements IOrderServicePort {
 
         String role = getRoleOfCurrentUser();
 
-        registerAudit(
-                updatedOrder.getId(),
-                updatedOrder.getRestaurant().getId(),
-                updatedOrder.getClient(),
-                previousStatus,
-                OrderStatusEnum.READY,
-                employeeId,
-                role,
-                OrderAuditActionType.READY_FOR_PICKUP.getValue(),
-                employeeId,
-                "Pedido marcado como listo para recoger"
-        );
+        orderAuditPort.registerStatusChange(OrderAuditModel.builder()
+                .orderId(updatedOrder.getId())
+                .restaurantId(updatedOrder.getRestaurant().getId())
+                .clientId(updatedOrder.getClient())
+                .previousStatus(previousStatus)
+                .newStatus(OrderStatusEnum.READY)
+                .changedByUserId(employeeId)
+                .changedByRole(role)
+                .actionType(OrderAuditActionType.READY_FOR_PICKUP.getValue())
+                .employeeId(employeeId)
+                .notes("Pedido marcado como listo para recoger")
+                .build());
 
         // Enviar SMS al cliente con el PIN de seguridad
         smsUseCase.sendOrderReadyNotification(client, updatedOrder);
@@ -186,18 +187,18 @@ public class OrderUseCase implements IOrderServicePort {
         String role = getRoleOfCurrentUser();
 
         // Registrar auditoría de entrega
-        registerAudit(
-                updatedOrder.getId(),
-                updatedOrder.getRestaurant().getId(),
-                updatedOrder.getClient(),
-                previousStatus,
-                OrderStatusEnum.DELIVERED,
-                employeeId,
-                role,
-                OrderAuditActionType.DELIVERED.getValue(),
-                employeeId,
-                "Pedido entregado al cliente con PIN verificado"
-        );
+        orderAuditPort.registerStatusChange(OrderAuditModel.builder()
+                .orderId(updatedOrder.getId())
+                .restaurantId(updatedOrder.getRestaurant().getId())
+                .clientId(updatedOrder.getClient())
+                .previousStatus(previousStatus)
+                .newStatus(OrderStatusEnum.DELIVERED)
+                .changedByUserId(employeeId)
+                .changedByRole(role)
+                .actionType(OrderAuditActionType.DELIVERED.getValue())
+                .employeeId(employeeId)
+                .notes("Pedido entregado al cliente con PIN verificado")
+                .build());
 
         return updatedOrder;
     }
@@ -226,18 +227,18 @@ public class OrderUseCase implements IOrderServicePort {
 
         String role = getRoleOfCurrentUser();
 
-        registerAudit(
-                updatedOrder.getId(),
-                updatedOrder.getRestaurant().getId(),
-                updatedOrder.getClient(),
-                previousStatus,
-                OrderStatusEnum.CANCELLED,
-                currentUserId,
-                role,
-                OrderAuditActionType.CANCELLATION.getValue(),
-                null,
-                "Pedido cancelado por el cliente"
-        );
+        orderAuditPort.registerStatusChange(OrderAuditModel.builder()
+                .orderId(updatedOrder.getId())
+                .restaurantId(updatedOrder.getRestaurant().getId())
+                .clientId(updatedOrder.getClient())
+                .previousStatus(previousStatus)
+                .newStatus(OrderStatusEnum.CANCELLED)
+                .changedByUserId(currentUserId)
+                .changedByRole(role)
+                .actionType(OrderAuditActionType.CANCELLATION.getValue())
+                .employeeId(null)
+                .notes("Pedido cancelado por el cliente")
+                .build());
 
         smsUseCase.sendOrderCancelledNotification(client, updatedOrder);
 
@@ -288,26 +289,6 @@ public class OrderUseCase implements IOrderServicePort {
         }
 
         return client;
-    }
-
-    private void registerAudit(
-            Long orderId,
-            Long restaurantId,
-            Long clientId,
-            OrderStatusEnum previousStatus,
-            OrderStatusEnum newStatus,
-            Long changedByUserId,
-            String changedByRole,
-            String actionType,
-            Long employeeId,
-            String notes
-    ) {
-        orderAuditPort.registerStatusChange(
-                orderId, restaurantId, clientId,
-                previousStatus, newStatus,
-                changedByUserId, changedByRole,
-                actionType, employeeId, notes
-        );
     }
 
 }

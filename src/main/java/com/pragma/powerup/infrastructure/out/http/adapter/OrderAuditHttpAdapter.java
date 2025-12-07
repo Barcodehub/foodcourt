@@ -5,7 +5,7 @@ import com.pragma.powerup.apifirst.model.OrderStatusAuditListResponseDto;
 import com.pragma.powerup.apifirst.model.OrderStatusAuditRequestDto;
 import com.pragma.powerup.apifirst.model.OrdersDurationMetricsResponseDto;
 import com.pragma.powerup.apifirst.model.EmployeeEfficiencyMetricsResponseDto;
-import com.pragma.powerup.domain.enums.OrderStatusEnum;
+import com.pragma.powerup.domain.model.OrderAuditModel;
 import com.pragma.powerup.domain.spi.IOrderAuditPort;
 import com.pragma.powerup.infrastructure.exception.RemoteServiceException;
 import com.pragma.powerup.infrastructure.out.http.client.IOrderAuditClient;
@@ -30,44 +30,33 @@ public class OrderAuditHttpAdapter implements IOrderAuditPort {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public void registerStatusChange(
-            Long orderId,
-            Long restaurantId,
-            Long clientId,
-            OrderStatusEnum previousStatus,
-            OrderStatusEnum newStatus,
-            Long changedByUserId,
-            String changedByRole,
-            String actionType,
-            Long employeeId,
-            String notes
-    ) {
+    public void registerStatusChange(OrderAuditModel auditModel) {
         try {
             OrderStatusAuditRequestDto request = new OrderStatusAuditRequestDto();
-            request.setOrderId(orderId);
-            request.setRestaurantId(restaurantId);
-            request.setClientId(clientId);
-            request.setPreviousStatus(previousStatus != null ? previousStatus.name() : null);
-            request.setNewStatus(newStatus.name());
-            request.setChangedByUserId(changedByUserId);
-            request.setChangedByRole(changedByRole);
-            request.setActionType(actionType);
-            request.setEmployeeId(employeeId);
-            request.setNotes(notes);
+            request.setOrderId(auditModel.getOrderId());
+            request.setRestaurantId(auditModel.getRestaurantId());
+            request.setClientId(auditModel.getClientId());
+            request.setPreviousStatus(auditModel.getPreviousStatus() != null ? auditModel.getPreviousStatus().name() : null);
+            request.setNewStatus(auditModel.getNewStatus().name());
+            request.setChangedByUserId(auditModel.getChangedByUserId());
+            request.setChangedByRole(auditModel.getChangedByRole());
+            request.setActionType(auditModel.getActionType());
+            request.setEmployeeId(auditModel.getEmployeeId());
+            request.setNotes(auditModel.getNotes());
 
             log.info("Registrando auditoría para orden {} - Estado: {} -> {}",
-                    orderId,
-                    previousStatus != null ? previousStatus.name() : "NUEVA",
-                    newStatus.name());
+                    auditModel.getOrderId(),
+                    auditModel.getPreviousStatus() != null ? auditModel.getPreviousStatus().name() : "NUEVA",
+                    auditModel.getNewStatus().name());
 
             orderAuditClient.registerAudit(request);
 
-            log.info("Auditoría registrada exitosamente para orden {}", orderId);
+            log.info("Auditoría registrada exitosamente para orden {}", auditModel.getOrderId());
 
         } catch (Exception e) {
             // no lanzamos excepción para no interrumpir el flujo del negocio
             log.error("Error al registrar auditoría para orden {}: {}",
-                    orderId, e.getMessage(), e);
+                    auditModel.getOrderId(), e.getMessage(), e);
         }
     }
 
@@ -141,7 +130,6 @@ public class OrderAuditHttpAdapter implements IOrderAuditPort {
             Long restaurantId,
             OffsetDateTime startDate,
             OffsetDateTime endDate,
-            Integer minOrdersCompleted,
             Integer page,
             Integer size,
             String sortBy,
@@ -155,7 +143,6 @@ public class OrderAuditHttpAdapter implements IOrderAuditPort {
                     restaurantId,
                     startDate,
                     endDate,
-                    minOrdersCompleted,
                     page,
                     size,
                     sortBy,

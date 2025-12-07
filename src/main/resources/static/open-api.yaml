@@ -737,13 +737,6 @@ paths:
             type: string
             format: date-time
             example: "2025-12-31T23:59:59"
-        - name: minOrdersCompleted
-          in: query
-          description: Número mínimo de pedidos completados para aparecer en el ranking
-          required: false
-          schema:
-            type: integer
-            default: 1
         - name: page
           in: query
           description: Número de página

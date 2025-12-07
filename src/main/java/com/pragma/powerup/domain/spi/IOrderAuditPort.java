@@ -3,7 +3,7 @@ package com.pragma.powerup.domain.spi;
 import com.pragma.powerup.apifirst.model.OrderStatusAuditListResponseDto;
 import com.pragma.powerup.apifirst.model.OrdersDurationMetricsResponseDto;
 import com.pragma.powerup.apifirst.model.EmployeeEfficiencyMetricsResponseDto;
-import com.pragma.powerup.domain.enums.OrderStatusEnum;
+import com.pragma.powerup.domain.model.OrderAuditModel;
 
 import java.time.OffsetDateTime;
 import java.util.List;
@@ -11,18 +11,7 @@ import java.util.List;
 // Puerto de salida para el servicio de auditoría
 public interface IOrderAuditPort {
 
-    void registerStatusChange(
-            Long orderId,
-            Long restaurantId,
-            Long clientId,
-            OrderStatusEnum previousStatus,
-            OrderStatusEnum newStatus,
-            Long changedByUserId,
-            String changedByRole,
-            String actionType,
-            Long employeeId,
-            String notes
-    );
+    void registerStatusChange(OrderAuditModel auditModel);
 
     OrderStatusAuditListResponseDto getAuditHistory(
             Long clientId,
@@ -46,7 +35,6 @@ public interface IOrderAuditPort {
             Long restaurantId,
             OffsetDateTime startDate,
             OffsetDateTime endDate,
-            Integer minOrdersCompleted,
             Integer page,
             Integer size,
             String sortBy,

@@ -21,7 +21,7 @@ public class RestaurantUseCase implements IRestaurantServicePort {
 
     private final IRestaurantPersistencePort restaurantPersistencePort;
     private final IUserValidationPort userValidationPort;
-    private static final String NUMERIC_REGEX_PATTERN = "^[0-9]+$";
+    private static final String NUMERIC_REGEX_PATTERN = "^\\d+$"; //[0-9]
 
     @Override
     public RestaurantModel createRestaurant(RestaurantModel restaurantModel) {

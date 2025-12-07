@@ -48,7 +48,6 @@ public interface IOrderAuditClient {
             @RequestParam(value = "restaurantId") Long restaurantId,
             @RequestParam(value = "startDate", required = false) OffsetDateTime startDate,
             @RequestParam(value = "endDate", required = false) OffsetDateTime endDate,
-            @RequestParam(value = "minOrdersCompleted", defaultValue = "1") Integer minOrdersCompleted,
             @RequestParam(value = "page", defaultValue = "0") Integer page,
             @RequestParam(value = "size", defaultValue = "20") Integer size,
             @RequestParam(value = "sortBy", defaultValue = "averageDurationMinutes") String sortBy,
