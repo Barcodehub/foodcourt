@@ -7,10 +7,13 @@ import com.pragma.powerup.domain.exception.*;
 import com.pragma.powerup.domain.model.OrderAuditModel;
 import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
+import com.pragma.powerup.domain.model.DishModel;
+import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.spi.IOrderAuditPort;
 import com.pragma.powerup.domain.spi.IOrderPersistencePort;
 import com.pragma.powerup.domain.spi.ISecurityContextPort;
 import com.pragma.powerup.domain.spi.IUserValidationPort;
+import com.pragma.powerup.domain.spi.IDishPersistencePort;
 import com.pragma.powerup.infrastructure.exceptionhandler.ExceptionResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -27,12 +30,14 @@ public class OrderUseCase implements IOrderServicePort {
     private final IUserValidationPort userValidationPort;
     private final IOrderAuditPort orderAuditPort;
     private final SmsUseCase smsUseCase;
+    private final IDishPersistencePort dishPersistencePort;
 
 
     @Override
     @Transactional
     public OrderModel createOrder(OrderModel orderModel) {
         validOneOrderByUser(orderModel);
+        validateDishesForOrder(orderModel);
         orderModel.setStatus(OrderStatusEnum.PENDIENT);
         orderModel.setSecurityPin(smsUseCase.generateSecurityPin());
         OrderModel orderSaved = orderPersistencePort.saveOrder(orderModel);
@@ -121,6 +126,10 @@ public class OrderUseCase implements IOrderServicePort {
         OrderModel order = findOrderById(orderId);
         Long employeeId = securityContextPort.getCurrentUserId();
         validateEmployeeBelongsToRestaurant(order);
+
+        if (!order.getEmployee().equals(employeeId)) {
+            throw new UnauthorizedOperationException(ExceptionResponse.EMPLOYEE_NOT_ASSIGNED_TO_ORDER.getMessage());
+        }
 
         if (order.getStatus() != OrderStatusEnum.IN_PREPARE) {
             throw new InvalidOrderStatusException(ExceptionResponse.ORDER_INVALID_STATUS_FOR_READY.getMessage());
@@ -291,5 +300,32 @@ public class OrderUseCase implements IOrderServicePort {
         return client;
     }
 
-}
+    private void validateDishesForOrder(OrderModel orderModel) {
+        if (orderModel.getDishes() == null || orderModel.getDishes().isEmpty()) {
+            throw new InvalidOrderStatusException(ExceptionResponse.ORDER_EMPTY_DISHES.getMessage());
+        }
 
+        Long restaurantId = orderModel.getRestaurant().getId();
+
+        for (OrderDishModel orderDish : orderModel.getDishes()) {
+            Long dishId = orderDish.getDish().getId();
+
+            DishModel dish = dishPersistencePort.findById(dishId)
+                    .orElseThrow(() -> new DishNotFoundException(
+                            ExceptionResponse.DISH_NOT_FOUND.getMessage()));
+
+            if (!dish.getRestaurantId().equals(restaurantId)) {
+                throw new InvalidOrderStatusException(
+                        ExceptionResponse.DISH_NOT_BELONG_TO_RESTAURANT.getMessage()
+                                .replace("{0}", String.valueOf(dishId)));
+            }
+
+            if (!Boolean.TRUE.equals(dish.getActive())) {
+                throw new InvalidOrderStatusException(
+                        ExceptionResponse.DISH_NOT_ACTIVE.getMessage()
+                                .replace("{0}", String.valueOf(dishId)));
+            }
+        }
+    }
+
+}

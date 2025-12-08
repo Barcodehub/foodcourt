@@ -9,7 +9,7 @@ import org.springframework.data.domain.Pageable;
 import java.util.Optional;
 
 public interface IOrderRepository extends JpaRepository<OrderEntity, Long> {
-    Optional<OrderEntity> findByClientAndStatusNot(Long userId, OrderStatusEnum delivered);
+    Optional<OrderEntity> findByClientAndStatusNotIn(Long userId, java.util.List<OrderStatusEnum> excludedStatuses);
     Page<OrderEntity> findByStatusAndRestaurantId(OrderStatusEnum status, Long restaurantId, Pageable pageable);
     Page<OrderEntity> findByRestaurantId(Long restaurantId, Pageable pageable);
 }

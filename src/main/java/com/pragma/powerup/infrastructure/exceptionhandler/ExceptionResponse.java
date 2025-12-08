@@ -43,7 +43,10 @@ public enum ExceptionResponse {
     DISH_NOT_FOUND("No se encontró el plato solicitado"),
     DISH_PRICE_INVALID("El precio debe ser mayor a 0"),
     DISH_RESTAURANT_NOT_FOUND("No se encontró el restaurante asociado al plato"),
-    DISH_UNAUTHORIZED_OWNER("Solo el propietario del restaurante puede crear o modificar platos.");
+    DISH_UNAUTHORIZED_OWNER("Solo el propietario del restaurante puede crear o modificar platos."),
+    DISH_NOT_BELONG_TO_RESTAURANT("El plato con ID {0} no pertenece al restaurante especificado"),
+    DISH_NOT_ACTIVE("El plato con ID {0} no está disponible en este momento"),
+    ORDER_EMPTY_DISHES("El pedido debe contener al menos un plato");
 
     private final String message;
 
