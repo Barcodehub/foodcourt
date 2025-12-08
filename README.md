@@ -110,6 +110,8 @@ El proyecto cubre **18 Historias de Usuario** completas:
 
 ## Endpoints Implementados
 
+La colleccion de **Postman** con todos los endpoints está disponible [aquí](MicroserviciosPragmaFoodCourt.postman_collection).
+
 ### Restaurantes
 
 #### `POST /restaurants`
@@ -192,8 +194,8 @@ Authorization: Bearer <token>
   "name": "Hamburguesa Especial",
   "price": 25000,
   "description": "Deliciosa hamburguesa con queso y tocino",
-  "imageUrl": "https://example.com/burger.png",
-  "categoryId": 1,
+  "urlImage": "https://example.com/burger.png",
+  "category": "COMIDA_RAPIDA", 
   "restaurantId": 1
 }
 ```
@@ -206,7 +208,7 @@ Authorization: Bearer <token>
     "name": "Hamburguesa Especial",
     "price": 25000,
     "description": "Deliciosa hamburguesa con queso y tocino",
-    "imageUrl": "https://example.com/burger.png",
+    "urlImage": "https://example.com/burger.png",
     "category": "COMIDA_RAPIDA",
     "active": true,
     "restaurantId": 1
@@ -241,7 +243,7 @@ Habilitar/Deshabilitar un plato (solo PROPIETARIO).
 
 ---
 
-#### `GET /dishes`
+#### `GET /restaurants/{restaurantId}/dishes`
 Listar platos de un restaurante (con filtros opcionales).
 
 **Query Parameters:**
@@ -272,6 +274,11 @@ Listar platos de un restaurante (con filtros opcionales).
   }
 }
 ```
+
+---
+
+#### `PATCH /dishes/{dishId}/toggle`
+Toggle para habilitar o deshabilitar un plato.
 
 ---
 
@@ -431,33 +438,120 @@ Cancelar pedido (solo CLIENTE, solo si está PENDIENTE).
 
 ### Métricas
 
-#### `GET /metrics/restaurant/{restaurantId}/efficiency`
-Consultar eficiencia de pedidos por restaurante (solo PROPIETARIO).
+#### `GET /metrics/orders-duration?restaurantId={restaurantId}`
+Consultar eficiencia(tiempos) de pedidos por restaurante (solo PROPIETARIO).
 
 **Response (200 OK):**
 ```json
 {
   "data": {
-    "restaurantId": 1,
-    "totalOrders": 50,
-    "averageTimeMinutes": 25,
-    "employeeRanking": [
+    "orders": [
       {
+        "orderId": 1,
+        "clientId": 10,
         "employeeId": 7,
-        "employeeName": "Juan Pérez",
-        "ordersCompleted": 30,
-        "averageTimeMinutes": 20
-      },
-      {
-        "employeeId": 8,
-        "employeeName": "María García",
-        "ordersCompleted": 20,
-        "averageTimeMinutes": 30
+        "startedAt": "2025-12-02T10:00:00Z",
+        "completedAt": "2025-12-02T10:45:00Z",
+        "finalStatus": "ENTREGADO",
+        "durationMinutes": 45
       }
-    ]
+    ],
+    "summary": {
+      "totalOrders": 150,
+      "averageDurationMinutes": 30.5,
+      "minDurationMinutes": 15,
+      "maxDurationMinutes": 120,
+      "medianDurationMinutes": 28.0,
+      "deliveredCount": 140,
+      "cancelledCount": 10
+    }
+  },
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 100,
+    "totalPages": 10
   }
 }
 ```
+
+---
+
+#### `GET /metrics/employee-efficiency?restaurantId={restaurantId}`
+Consultar eficiencia de empleado en un restaurante (solo PROPIETARIO).
+
+**Response (200 OK):**
+```json
+{
+  "data": {
+    "ranking": [
+      {
+        "rank": 1,
+        "employeeId": 7,
+        "totalOrdersCompleted": 45,
+        "totalOrdersDelivered": 42,
+        "totalOrdersCancelled": 3,
+        "averageDurationMinutes": 25.5,
+        "minDurationMinutes": 15,
+        "maxDurationMinutes": 60,
+        "medianDurationMinutes": 24.0
+      }
+    ],
+    "summary": {
+      "totalEmployees": 15,
+      "restaurantAverageDurationMinutes": 30.5,
+      "bestEmployeeAverageDurationMinutes": 22.0,
+      "worstEmployeeAverageDurationMinutes": 45.0,
+      "totalOrdersProcessed": 450
+    }
+  },
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 15,
+    "totalPages": 2
+  }
+}
+```
+
+---
+
+### Auditoría de Pedidos
+
+#### `GET /orders/audit/history`
+Consultar historial de auditoría de pedidos (solo CLIENTE).
+
+**Response (200 OK):**
+```json
+{
+  "data": [
+    {
+      "id": "507f1f77bcf86cd799439011",
+      "orderId": 1,
+      "restaurantId": 5,
+      "clientId": 10,
+      "previousStatus": "PENDIENT",
+      "newStatus": "IN_PREPARE",
+      "changedByUserId": 7,
+      "changedByRole": "EMPLEADO",
+      "changedAt": "2025-12-02T10:30:00",
+      "actionType": "ASSIGNMENT",
+      "employeeId": 7,
+      "ipAddress": "192.168.1.100",
+      "userAgent": "Mozilla/5.0",
+      "notes": "Pedido asignado al empleado",
+      "timeInPreviousStatusMinutes": 15
+    }
+  ],
+  "meta": {
+    "page": 0,
+    "size": 10,
+    "totalElements": 100,
+    "totalPages": 10
+  }
+}
+```
+
 
 ---
 
@@ -638,4 +732,3 @@ El microservicio valida tokens JWT generados por el microservicio de Users:
 ## Licencia
 
 Este proyecto es parte de la prueba técnica de Pragma.
-
