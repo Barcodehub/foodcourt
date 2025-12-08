@@ -2,13 +2,12 @@ package com.pragma.powerup.domain.usecase;
 
 import com.pragma.powerup.domain.enums.OrderStatusEnum;
 import com.pragma.powerup.domain.exception.*;
+import com.pragma.powerup.domain.model.DishModel;
+import com.pragma.powerup.domain.model.OrderDishModel;
 import com.pragma.powerup.domain.model.OrderModel;
 import com.pragma.powerup.domain.model.RestaurantModel;
 import com.pragma.powerup.domain.model.UserResponseModel;
-import com.pragma.powerup.domain.spi.IOrderAuditPort;
-import com.pragma.powerup.domain.spi.IOrderPersistencePort;
-import com.pragma.powerup.domain.spi.ISecurityContextPort;
-import com.pragma.powerup.domain.spi.IUserValidationPort;
+import com.pragma.powerup.domain.spi.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
@@ -48,6 +47,9 @@ class OrderUseCaseTest {
     @Mock
     private SmsUseCase smsUseCase;
 
+    @Mock
+    private IDishPersistencePort dishPersistencePort;
+
     @InjectMocks
     private OrderUseCase orderUseCase;
 
@@ -79,12 +81,36 @@ class OrderUseCaseTest {
         employee.setRole("EMPLEADO");
         employee.setRestaurantWorkId(RESTAURANT_ID);
 
+        // Crear platos para la orden
+        DishModel dish1 = new DishModel();
+        dish1.setId(1L);
+        dish1.setName("Plato 1");
+        dish1.setRestaurantId(RESTAURANT_ID);
+        dish1.setActive(true);
+        dish1.setPrice(10000);
+
+        DishModel dish2 = new DishModel();
+        dish2.setId(2L);
+        dish2.setName("Plato 2");
+        dish2.setRestaurantId(RESTAURANT_ID);
+        dish2.setActive(true);
+        dish2.setPrice(15000);
+
+        OrderDishModel orderDish1 = new OrderDishModel();
+        orderDish1.setDish(dish1);
+        orderDish1.setQuantity(2);
+
+        OrderDishModel orderDish2 = new OrderDishModel();
+        orderDish2.setDish(dish2);
+        orderDish2.setQuantity(1);
+
         validOrder = new OrderModel();
         validOrder.setId(1L);
         validOrder.setRestaurant(restaurant);
         validOrder.setClient(CLIENT_ID);
         validOrder.setStatus(OrderStatusEnum.PENDIENT);
         validOrder.setSecurityPin(SECURITY_PIN);
+        validOrder.setDishes(Arrays.asList(orderDish1, orderDish2));
     }
 
     @Nested
@@ -94,6 +120,12 @@ class OrderUseCaseTest {
         @Test
         @DisplayName("Happy Path: Debe crear pedido correctamente")
         void shouldCreateOrderSuccessfully() {
+            // Mockear la validación de platos
+            DishModel dish1 = validOrder.getDishes().get(0).getDish();
+            DishModel dish2 = validOrder.getDishes().get(1).getDish();
+            when(dishPersistencePort.findById(1L)).thenReturn(Optional.of(dish1));
+            when(dishPersistencePort.findById(2L)).thenReturn(Optional.of(dish2));
+
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
             when(orderPersistencePort.getActiveOrderByUserId(CLIENT_ID)).thenReturn(Optional.empty());
             when(smsUseCase.generateSecurityPin()).thenReturn(SECURITY_PIN);
@@ -114,6 +146,13 @@ class OrderUseCaseTest {
         @DisplayName("Validacion: Debe asignar estado PENDIENT automaticamente")
         void shouldSetPendingStatusAutomatically() {
             validOrder.setStatus(null);
+
+            // Mockear la validación de platos
+            DishModel dish1 = validOrder.getDishes().get(0).getDish();
+            DishModel dish2 = validOrder.getDishes().get(1).getDish();
+            when(dishPersistencePort.findById(1L)).thenReturn(Optional.of(dish1));
+            when(dishPersistencePort.findById(2L)).thenReturn(Optional.of(dish2));
+
             when(securityContextPort.getCurrentUserId()).thenReturn(CLIENT_ID);
             when(orderPersistencePort.getActiveOrderByUserId(CLIENT_ID)).thenReturn(Optional.empty());
             when(smsUseCase.generateSecurityPin()).thenReturn(SECURITY_PIN);
@@ -294,6 +333,7 @@ class OrderUseCaseTest {
         @DisplayName("Error: Debe rechazar si cliente no tiene telefono")
         void shouldRejectWhenClientHasNoPhone() {
             validOrder.setStatus(OrderStatusEnum.IN_PREPARE);
+            validOrder.setEmployee(EMPLOYEE_ID);
             client.setPhoneNumber(null);
             Long orderId = validOrder.getId();
 
