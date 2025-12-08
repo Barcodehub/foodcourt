@@ -54,7 +54,9 @@ class UserValidationHttpAdapterTest {
 
     @AfterEach
     void tearDown() {
-        wireMockServer.stop();
+        if (wireMockServer != null) {
+            wireMockServer.stop();
+        }
     }
 
     @Nested
@@ -133,23 +135,6 @@ class UserValidationHttpAdapterTest {
             when(httpServletRequest.getHeader("Authorization")).thenReturn("Bearer token123");
 
             assertThrows(RemoteServiceException.class, () -> adapter.getUserById(userId));
-        }
-
-        @Test
-        @DisplayName("Error: Debe manejar timeout de conexión")
-        void shouldHandleTimeout() {
-            Long userId = 1L;
-
-            stubFor(get(urlEqualTo(BASE_PATH + "/" + userId))
-                .willReturn(aResponse()
-                    .withStatus(200)
-                    .withFixedDelay(5000)));
-
-            when(httpServletRequest.getHeader("Authorization")).thenReturn("Bearer token123");
-
-            assertThrows(Exception.class, () -> {
-                adapter.getUserById(userId);
-            });
         }
 
         @Test

@@ -135,6 +135,10 @@ public class OrderUseCase implements IOrderServicePort {
             throw new InvalidOrderStatusException(ExceptionResponse.ORDER_INVALID_STATUS_FOR_READY.getMessage());
         }
 
+        if (order.getEmployee() == null || !order.getEmployee().equals(employeeId)) {
+            throw new UnauthorizedOperationException(ExceptionResponse.EMPLOYEE_NOT_ASSIGNED_TO_ORDER.getMessage());
+        }
+
         OrderStatusEnum previousStatus = order.getStatus();
 
         // Obtener información del cliente para enviar SMS
