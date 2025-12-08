@@ -1,0 +1,846 @@
+{
+	"info": {
+		"_postman_id": "f447a37e-fc00-41c5-b570-0f58293a82cb",
+		"name": "Microservicios Pragma Food Court",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "46859318"
+	},
+	"item": [
+		{
+			"name": "foodCourt",
+			"item": [
+				{
+					"name": "Users",
+					"item": [
+						{
+							"name": "Login",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"email\": \"admin@admin.com\",\r\n  \"password\": \"Admin123\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8081/auth/login",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"auth",
+										"login"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create User",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU5JU1RSQURPUiIsInJvbGVJZCI6MSwidXNlcklkIjoxOCwic3ViIjoianVhbnBlcmU5OTk5QGVtYWlsLmNvbSIsImlhdCI6MTc2NDk4NDUwOCwiZXhwIjoxNzY0OTg0NTY4fQ.nNgOsOjk61YA5DnKje-qUS3ewakguX1Ntg5EBAdUoOQ",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Juan\",\r\n  \"lastName\": \"Pérez\",\r\n  \"password\": \"MiClaveSegura123\",\r\n  \"email\": \"juanpere07@email.com\",\r\n  \"identificationDocument\": \"1348917990\",\r\n  \"phoneNumber\": \"+57j3005698325\",\r\n  \"birthDate\": \"2000-01-01\",\r\n  \"roleId\": 2 //enum envia el front\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8081/users",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"users"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Public Register",
+							"request": {
+								"auth": {
+									"type": "noauth"
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Juan\",\r\n  \"lastName\": \"Pérez\",\r\n  \"password\": \"MiClaveSegura123\",\r\n  \"email\": \"juanpere0ww1@email.com\",\r\n  \"identificationDocument\": \"1341371990\",\r\n  \"phoneNumber\": \"+573300569835\",\r\n  \"birthDate\": \"2000-01-01\",\r\n  \"roleId\": 4 //enum envia el front\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8081/users/public",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"users",
+										"public"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Users",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU5JU1RSQURPUiIsInJvbGVJZCI6MSwidXNlcklkIjoxOCwic3ViIjoianVhbnBlcmU5OTk5QGVtYWlsLmNvbSIsImlhdCI6MTc2NTEyOTk2OCwiZXhwIjoxNzY1MjE2MzY4fQ.3m-B2W-hR5rym79hYu772THTMl6XjJsjH6kT6Gwc-xucCuPE9R--3kfhyhG8mPxK",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8081/users?size=100",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"users"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "100"
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get User by Id",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQURNSU5JU1RSQURPUiIsInJvbGVJZCI6MSwidXNlcklkIjoxOCwic3ViIjoianVhbnBlcmU5OTk5QGVtYWlsLmNvbSIsImlhdCI6MTc2NDk4OTUyMCwiZXhwIjoxNzY0OTg5NTgwfQ.0e6uYzDXDEnhbGC_Z5LUrg8K9SzT92QV7ZbbW6n0Cq4",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8081/users/2",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8081",
+									"path": [
+										"users",
+										"2"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Restaurant-dishes",
+					"item": [
+						{
+							"name": "Create Restaurant",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQURNSU5JU1RSQURPUiIsInJvbGVJZCI6MSwidXNlcklkIjoxOCwic3ViIjoianVhbnBlcmU5OTk5QGVtYWlsLmNvbSIsImlhdCI6MTc2NTE2MzM5MSwiZXhwIjoxNzY1MjQ5NzkxfQ.91Jj_4isPlTkRX3I134v2pO1Is519AjhFyBLdTNJxaQonUlBfFCRKwviqV7nWpRs",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Restaurante El Buen Sabor 3\",\r\n  \"nit\": \"900123474611\",\r\n  \"address\": \"Calle 123 #45-67\",\r\n  \"phoneNumber\": \"+573001234567\",\r\n  \"urlLogo\": \"https://example.com/logo.png\",\r\n  \"ownerId\": 21\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/restaurants",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"restaurants"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Create dish",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUFJPUElFVEFSSU8iLCJyb2xlSWQiOjIsInVzZXJJZCI6MjEsInN1YiI6Imp1YW5wZXJlOTk3OUBlbWFpbC5jb20iLCJpYXQiOjE3NjQ5OTA3MzIsImV4cCI6MTc2NDk5MDc5Mn0.qKAIXuRaUjW2LhEBXA7NA6J1GCVYEAQF05_i1HBmF8k",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"name\": \"Bandeja Paisa\",\r\n  \"price\": 1,\r\n  \"description\": \"Deliciosa bandeja paisa tradicional con todos los ingredientes\",\r\n  \"urlImage\": \"https://example.com/bandeja-paisa.jpg\",\r\n  \"category\": \"COMIDA_RAPIDA\",\r\n  \"restaurantId\": 2\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/dishes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"dishes"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Update dish",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUFJPUElFVEFSSU8iLCJyb2xlSWQiOjIsInVzZXJJZCI6MjEsInN1YiI6Imp1YW5wZXJlOTk3OUBlbWFpbC5jb20iLCJpYXQiOjE3NjQ5OTA3MzIsImV4cCI6MTc2NDk5MDc5Mn0.qKAIXuRaUjW2LhEBXA7NA6J1GCVYEAQF05_i1HBmF8k",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"price\": 28000,\r\n  \"description\": \"Bandeja paisa mejorada con ingredientes premium\"\r\n}\r\n",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/dishes/6",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"dishes",
+										"6"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Active/Desactive Dish",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUFJPUElFVEFSSU8iLCJyb2xlSWQiOjIsInVzZXJJZCI6MjEsInN1YiI6Imp1YW5wZXJlOTk3OUBlbWFpbC5jb20iLCJpYXQiOjE3NjUwMzE4OTMsImV4cCI6MTc2NTAzMTk1M30.qJFYe68ErWpdTSgOGmAk1t9MqLNkRdhhQrOIiROPnCk",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/dishes/6/toggle",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"dishes",
+										"6",
+										"toggle"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get Restaurants",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQ0xJRU5URSIsInJvbGVJZCI6NCwidXNlcklkIjoxLCJzdWIiOiJhZG1pbkBmb29kY291cnQuY29tIiwiaWF0IjoxNzY1MTMwMDU3LCJleHAiOjE3NjUyMTY0NTd9.fB-ZxLnBKWtjfTHIaFSuwN0WJP31mnNoWZtOJC_S2ky5B8jz_rlbbpKqLFUL3nMh\",",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/restaurants",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"restaurants"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "100",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get dishes of Restaurants",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQ0xJRU5URSIsInJvbGVJZCI6NCwidXNlcklkIjoxLCJzdWIiOiJhZG1pbkBmb29kY291cnQuY29tIiwiaWF0IjoxNzY1MTMwMDU3LCJleHAiOjE3NjUyMTY0NTd9.fB-ZxLnBKWtjfTHIaFSuwN0WJP31mnNoWZtOJC_S2ky5B8jz_rlbbpKqLFUL3nMh\",",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/restaurants/1/dishes",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"restaurants",
+										"1",
+										"dishes"
+									],
+									"query": [
+										{
+											"key": "category",
+											"value": "COMIDA_RAPIDA",
+											"disabled": true
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "0",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Orders",
+					"item": [
+						{
+							"name": "Create order",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQ0xJRU5URSIsInJvbGVJZCI6NCwidXNlcklkIjoxLCJzdWIiOiJhZG1pbkBmb29kY291cnQuY29tIiwiaWF0IjoxNzY1MDQwNjUxLCJleHAiOjE3NjUxMjcwNTF9.9Ee2JLBaSZCKw6VlBrpHqWgDqv02h1jcSLepr54RUDE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n    \"restaurantId\": 1,\r\n    \"dishes\": [\r\n        {\r\n            \"dishId\": 5,\r\n            \"quantity\": 2\r\n        },\r\n        {\r\n            \"dishId\": 2,\r\n            \"quantity\": 1\r\n        }\r\n    ]\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/orders",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Get orders",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiRU1QTEVBRE8iLCJyb2xlSWQiOjMsInVzZXJJZCI6Miwic3ViIjoiYWRtaW5AYWRtaW4uY29tIiwiaWF0IjoxNzY1MDM5NDMxLCJleHAiOjE3NjUwMzk0OTF9.rr7_7ifbuhNcZp-UyxQUrtJ1k2mbcb5gQPZbe4d-2So",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/orders",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders"
+									],
+									"query": [
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "1",
+											"disabled": true
+										},
+										{
+											"key": "status",
+											"value": "PENDIENT",
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Cancel order",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiQ0xJRU5URSIsInJvbGVJZCI6NCwidXNlcklkIjoxLCJzdWIiOiJhZG1pbkBmb29kY291cnQuY29tIiwiaWF0IjoxNzY1MDQwNjUxLCJleHAiOjE3NjUxMjcwNTF9.9Ee2JLBaSZCKw6VlBrpHqWgDqv02h1jcSLepr54RUDE",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/orders/23/cancel",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders",
+										"23",
+										"cancel"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "assignme a order",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiRU1QTEVBRE8iLCJyb2xlSWQiOjMsInVzZXJJZCI6Miwic3ViIjoiYWRtaW5AYWRtaW4uY29tIiwiaWF0IjoxNzY1MDM5OTY4LCJleHAiOjE3NjUxMjYzNjh9.tj-9aVybZW-h6u3qkHVXqc-5N98LdGy5DVezi2gjFAg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/orders/22/assign",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders",
+										"22",
+										"assign"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Mark order as ready",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiRU1QTEVBRE8iLCJyb2xlSWQiOjMsInVzZXJJZCI6Miwic3ViIjoiYWRtaW5AYWRtaW4uY29tIiwiaWF0IjoxNzY1MDM5OTY4LCJleHAiOjE3NjUxMjYzNjh9.tj-9aVybZW-h6u3qkHVXqc-5N98LdGy5DVezi2gjFAg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"url": {
+									"raw": "http://localhost:8080/orders/22/ready",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders",
+										"22",
+										"ready"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "deliver order",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiRU1QTEVBRE8iLCJyb2xlSWQiOjMsInVzZXJJZCI6Miwic3ViIjoiYWRtaW5AYWRtaW4uY29tIiwiaWF0IjoxNzY1MDM5OTY4LCJleHAiOjE3NjUxMjYzNjh9.tj-9aVybZW-h6u3qkHVXqc-5N98LdGy5DVezi2gjFAg",
+											"type": "string"
+										}
+									]
+								},
+								"method": "PATCH",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\r\n  \"securityPin\": \"964210\"\r\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "http://localhost:8080/orders/22/deliver",
+									"protocol": "http",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"orders",
+										"22",
+										"deliver"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Ranking",
+					"item": [
+						{
+							"name": "employee-efficiency",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUFJPUElFVEFSSU8iLCJyb2xlSWQiOjIsInVzZXJJZCI6MjEsInN1YiI6Imp1YW5wZXJlOTk3OUBlbWFpbC5jb20iLCJpYXQiOjE3NjUwNzMwMDgsImV4cCI6MTc2NTE1OTQwOH0.b4hqxIwaGPFG7Bc-E5JJfOaqF3aTfZ6LlqKLfKP5EYs",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/metrics/employee-efficiency?restaurantId=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"metrics",
+										"employee-efficiency"
+									],
+									"query": [
+										{
+											"key": "restaurantId",
+											"value": "1"
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "10",
+											"disabled": true
+										},
+										{
+											"key": "startDate",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": "",
+											"disabled": true
+										},
+										{
+											"key": "minOrdersCompleted",
+											"value": "",
+											"disabled": true
+										}
+									]
+								},
+								"description": "Mostrar por empleado, es decir seria un ranking de empleados por restaurante, para que el propietario vea la eficiencia de pedidos por empleado, obviamente de su restaurante"
+							},
+							"response": []
+						},
+						{
+							"name": "orders-duration",
+							"request": {
+								"auth": {
+									"type": "bearer",
+									"bearer": [
+										{
+											"key": "token",
+											"value": "eyJhbGciOiJIUzI1NiJ9.eyJyb2xlIjoiUFJPUElFVEFSSU8iLCJyb2xlSWQiOjIsInVzZXJJZCI6MjEsInN1YiI6Imp1YW5wZXJlOTk3OUBlbWFpbC5jb20iLCJpYXQiOjE3NjUwNzMwMDgsImV4cCI6MTc2NTE1OTQwOH0.b4hqxIwaGPFG7Bc-E5JJfOaqF3aTfZ6LlqKLfKP5EYs",
+											"type": "string"
+										}
+									]
+								},
+								"method": "GET",
+								"header": [],
+								"url": {
+									"raw": "localhost:8080/metrics/orders-duration?restaurantId=1",
+									"host": [
+										"localhost"
+									],
+									"port": "8080",
+									"path": [
+										"metrics",
+										"orders-duration"
+									],
+									"query": [
+										{
+											"key": "restaurantId",
+											"value": "1"
+										},
+										{
+											"key": "page",
+											"value": "0",
+											"disabled": true
+										},
+										{
+											"key": "size",
+											"value": "10",
+											"disabled": true
+										},
+										{
+											"key": "startDate",
+											"value": null,
+											"disabled": true
+										},
+										{
+											"key": "endDate",
+											"value": null,
+											"disabled": true
+										}
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				},
+				{
+					"name": "Get Audit",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiQ0xJRU5URSIsInJvbGVJZCI6NCwidXNlcklkIjoxLCJzdWIiOiJhZG1pbkBmb29kY291cnQuY29tIiwiaWF0IjoxNzY1MTMwMDU3LCJleHAiOjE3NjUyMTY0NTd9.fB-ZxLnBKWtjfTHIaFSuwN0WJP31mnNoWZtOJC_S2ky5B8jz_rlbbpKqLFUL3nMh\",",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost:8080/orders/audit/history",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"port": "8080",
+							"path": [
+								"orders",
+								"audit",
+								"history"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "0",
+									"disabled": true
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"disabled": true
+								},
+								{
+									"key": "orderId",
+									"value": "21",
+									"disabled": true
+								},
+								{
+									"key": "actionTypes",
+									"value": "ORDER_CREATED",
+									"disabled": true
+								},
+								{
+									"key": "clientId",
+									"value": "1",
+									"description": "para futuros endpoints (ya es automatico segun el cliente)",
+									"disabled": true
+								},
+								{
+									"key": "actionTypes",
+									"value": "DELIVERED",
+									"disabled": true
+								},
+								{
+									"key": "page",
+									"value": "1",
+									"disabled": true
+								},
+								{
+									"key": "size",
+									"value": "10",
+									"disabled": true
+								}
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
