@@ -11,6 +11,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Repository;
 
+import java.util.Arrays;
 import java.util.Optional;
 
 @Repository
@@ -29,8 +30,10 @@ public class OrderJpaAdapter implements IOrderPersistencePort {
 
     @Override
     public Optional<OrderModel> getActiveOrderByUserId(Long userId) {
-        return orderRepository.findByClientAndStatusNot(userId, OrderStatusEnum.DELIVERED)
-                .map(orderEntityMapper::toDomain);
+        return orderRepository.findByClientAndStatusNotIn(
+                userId,
+                Arrays.asList(OrderStatusEnum.DELIVERED, OrderStatusEnum.CANCELLED)
+        ).map(orderEntityMapper::toDomain);
     }
 
     @Override

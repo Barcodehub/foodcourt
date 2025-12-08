@@ -42,13 +42,15 @@ public class BeanConfiguration {
             ISecurityContextPort securityContextPort,
             IUserValidationPort userValidationPort,
             IOrderAuditPort orderAuditPort,
-            SmsUseCase smsUseCase) {
+            SmsUseCase smsUseCase,
+            IDishPersistencePort dishPersistencePort) {
         return new OrderUseCase(
                 orderPersistencePort,
                 securityContextPort,
                 userValidationPort,
                 orderAuditPort,
-                smsUseCase
+                smsUseCase,
+                dishPersistencePort
         );
     }
 
